@@ -21,6 +21,7 @@
 	#include <stdarg.h>
 	#include <stdio.h>      /* vsnprintf */
 	#include "Enclave_t.h"  /* print_string */
+	#include <string.h>
 	#include <stdlib.h>
 	#include <stdio.h>
 	#include <stdint.h>
@@ -31,6 +32,7 @@
 	#include "oasm_lib.h"
 	#include "../Globals.hpp"
 	#include <assert.h>
+	#include <vector>
 
 	// define FLAGS :
 	#define ENCRYPTION_ON 1
@@ -92,6 +94,7 @@
 	};
 
 	struct nodev2{
+    bool discard_block = false;
 		unsigned char *serialized_block;
 		struct nodev2 *next;
 	};
@@ -105,6 +108,8 @@
 	};
 
 	void printf(const char *fmt, ...);
+	
+	void hexdump(unsigned char *a, size_t len);
 
 	void displaySerializedBlock( unsigned char *serialized_result_block, uint32_t level, uint32_t recursion_levels, uint32_t x);
 
@@ -166,4 +171,7 @@
 
 	void aes_dec_serialized(unsigned char* encrypted_block, uint32_t data_size, unsigned char *decrypted_block, unsigned char* aes_key);
 	void aes_enc_serialized(unsigned char* decrypted_block, uint32_t data_size, unsigned char *encrypted_block, unsigned char* aes_key);
+
+
+void check_data(unsigned char* a, unsigned char* b, size_t len);
 #endif

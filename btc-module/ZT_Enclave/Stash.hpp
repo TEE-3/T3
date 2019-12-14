@@ -40,6 +40,11 @@
 			void setStart(struct nodev2* new_start);
 			void setParams(uint32_t param_stash_data_size, uint32_t param_STASH_SIZE, uint32_t param_gN);
 			void PerformAccessOperation(char opType, uint32_t id, uint32_t newleaf, unsigned char *data_in, unsigned char *data_out);
+
+      // ADIL.
+      void PerformOptimizedAccessOperation(char opType, uint32_t id, uint32_t newleaf,
+      unsigned char *data_in, unsigned char *data_out);
+
 			void ObliviousFillResultData(uint32_t id, unsigned char *result_data);
 			uint32_t stashOccupancy();
 			void setup(uint32_t stash_size, uint32_t data_size, uint32_t gN);
@@ -52,6 +57,10 @@
 
       // ADIL.
       void clear();
+      void removeBlock(int id);
 	};
+
+
+extern bool optimized_reading;
 
 #endif

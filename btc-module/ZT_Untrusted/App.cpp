@@ -77,6 +77,7 @@ uint32_t recursion_levels_e = 0;
 
 /* Global EID shared by multiple threads */
 sgx_enclave_id_t global_eid = 0;
+int ptr;
 bool resume_experiment = false;
 bool inmem_flag =false;
 
@@ -536,6 +537,22 @@ void ZT_Access(uint32_t instance_id, uint8_t oram_type, unsigned char *encrypted
 
 void ZT_Bulk_Read(uint32_t instance_id, uint8_t oram_type, uint32_t no_of_requests, unsigned char *encrypted_request, unsigned char *encrypted_response, unsigned char *tag_in, unsigned char* tag_out, uint32_t request_size, uint32_t response_size, uint32_t tag_size){
     accessBulkReadInterface(global_eid, instance_id, oram_type, no_of_requests, encrypted_request, encrypted_response, tag_in, tag_out, request_size, response_size, tag_size);
+}
+
+void Red_SendRawTxList(uint32_t instance_id, uint8_t oram_type, uint32_t max_blocks, unsigned char * tx, size_t len, size_t numTxs, unsigned char * blockheader, uint32_t blockheight, uint32_t ORAM_block_size){
+	sgx_status_t status = sendRawTxList(global_eid, &ptr, instance_id, oram_type, max_blocks, tx, len, numTxs, blockheader, blockheight, ORAM_block_size);
+	//std::cout << status << std::endl;
+	if (status != SGX_SUCCESS) {
+		std::cout << "[-] Failed to send rawTx" << std::endl;
+	}
+}
+
+void test_ORAM(uint32_t instance_id, uint8_t oram_type, uint32_t block_size)
+{
+  sgx_status_t status = ORAM_testing(global_eid, instance_id, oram_type, block_size);
+  if (status != SGX_SUCCESS) {
+    std::cout << "FAILED" << std::endl;
+  }
 }
 
 /*

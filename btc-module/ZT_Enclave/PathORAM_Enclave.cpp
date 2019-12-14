@@ -16,6 +16,7 @@
 */
 
 #include "PathORAM_Enclave.hpp"
+#include "Stash.hpp"
 
 void oarray_search(uint32_t *array, uint32_t loc, uint32_t *leaf, uint32_t newLabel,uint32_t N_level) {
     for(uint32_t i=0;i<N_level;i++) {
@@ -56,13 +57,12 @@ uint32_t PathORAM::access_oram_level(char opType, uint32_t leaf, uint32_t id, ui
 
 	decrypted_path = ReadBucketsFromPath(leaf + N_level[level], path_hash, level);
 
-  printf("accessing Level #%d\n", level);
-
   if (opType == 'r') {
     // ADIL: Perform the simple LogN read from the tree.
-    printf("optimized reading\n");
-	  return_value = PathORAM_Access_Read(opType, id, position_in_id,leaf, newleaf, newleaf_nextleaf,decrypted_path, 
-					path_hash,level,D_level[level],N_level[level], data_in, data_out); 
+  	return_value = PathORAM_Access_Read(opType, id, position_in_id,leaf, newleaf, newleaf_nextleaf,decrypted_path, 
+	  path_hash,level,D_level[level],N_level[level], data_in, data_out); 
+	  // return_value = PathORAM_Access(opType, id, position_in_id,leaf, newleaf, newleaf_nextleaf,decrypted_path, 
+	  // path_hash,level,D_level[level],N_level[level], data_in, data_out); 
   } else {
     // Default Case: Perform read and write-back.
 	  return_value = PathORAM_Access(opType, id, position_in_id,leaf, newleaf, newleaf_nextleaf,decrypted_path, 
@@ -71,7 +71,101 @@ uint32_t PathORAM::access_oram_level(char opType, uint32_t leaf, uint32_t id, ui
   return return_value;		
 }
 
+uint32_t PathORAM::access_optimized(uint32_t id, uint32_t position_in_id, char opType, uint8_t level, unsigned char* data_in, unsigned char* data_out, uint32_t* prev_sampled_leaf){
+	uint32_t leaf = 0;
+	uint32_t nextLeaf;
+	uint32_t id_adj;				
+	uint32_t newleaf;
+	uint32_t newleaf_nextlevel = -1;
+	unsigned char random_value[ID_SIZE_IN_BYTES];
 
+	if(recursion_levels ==  -1) {
+		sgx_status_t rt = SGX_SUCCESS;
+
+		if(oblivious_flag) {
+			oarray_search(posmap,id,&leaf,newleaf,max_blocks);		
+		}
+		else{
+			leaf = posmap[id];
+			posmap[id] = newleaf;			
+		}	
+		time_report(1);	
+	
+		decrypted_path = ReadBucketsFromPath(leaf+N, path_hash,-1);			
+
+    printf("Accessing Non-Recursive Tree\n");
+
+    if (opType == 'r') {
+      // ADIL: optimized reading without write-back
+      printf("optimized reading\n");
+		  PathORAM_Access_Read(opType, id, -1, leaf, newleaf, -1, decrypted_path, path_hash, -1, D, N, data_in, data_out);
+    } else {
+      // Default case
+		  PathORAM_Access(opType, id, -1, leaf, newleaf, -1, decrypted_path, path_hash, -1, D, N, data_in, data_out);
+    }
+	}
+
+	else if(level==0) {
+	  leaf = posmap[id];
+
+/*
+		if(oblivious_flag) {
+			oarray_search(posmap, id, &leaf, newleaf, real_max_blocks_level[level]);				
+		}			
+		else {
+			leaf = posmap[id];
+			posmap[id] = newleaf;
+		}
+*/
+
+		#ifdef ACCESS_DEBUG
+			printf("access : Level = %d: \n Requested_id = %d, Corresponding leaf from posmap = %d, Newleaf assigned = %d,\n\n",level,id,leaf,newleaf);
+		#endif				
+		return leaf;
+	}
+	else if(level == 1){
+		id_adj = id/x;
+		leaf = access_optimized(id, -1, opType, level-1, data_in, data_out, prev_sampled_leaf);
+
+		#ifdef ACCESS_DEBUG
+			printf("access : Level = %d: \n leaf = %d, block_id = %d, position_in_id = %d, newleaf_nextlevel = %d\n",level,leaf,id,position_in_id,newleaf_nextlevel);
+		#endif
+
+		nextLeaf = access_oram_level(opType, leaf, id, position_in_id, level, *prev_sampled_leaf, newleaf_nextlevel, data_in, data_out);
+
+		#ifdef ACCESS_DEBUG
+			printf("access, Level = %d (After ORAM access): nextLeaf from level = %d \n\n",level,nextLeaf);
+		#endif
+		return nextLeaf;
+	}
+	else if(level == recursion_levels){
+		//DataAccess for leaf.
+		id_adj = id/x;
+		position_in_id = id%x;
+		leaf = access_optimized(id_adj, position_in_id, opType, level-1, data_in, data_out, prev_sampled_leaf);	
+		//ORAM ACCESS of recursion_levels is to fetch entire Data block, no position_in_id, hence -1)
+		time_report(1);
+		access_oram_level(opType, leaf, id, -1, level, *prev_sampled_leaf, -1, data_in, data_out);
+		return 0;	
+	}
+	else{
+		id_adj = id/x;
+		uint32_t nl_position_in_id = id%x;
+		leaf = access_optimized(id_adj, nl_position_in_id, opType, level-1, data_in, data_out, prev_sampled_leaf);	
+		newleaf = *prev_sampled_leaf;					
+		#ifdef ACCESS_DEBUG
+			printf("access, Level = %d :\n leaf = %d, block_id = %d, position_in_id = %d, newLeaf = %d, newleaf_nextlevel = %d\n",level,leaf,id,position_in_id,newleaf,newleaf_nextlevel);
+		#endif										
+		nextLeaf = access_oram_level(opType, leaf, id, position_in_id, level, newleaf, newleaf_nextlevel, data_in, data_out);
+		#ifdef ACCESS_DEBUG
+			printf("access, Level = %d : \n nextLeaf from level = %d\n",level,nextLeaf);
+		#endif
+	return nextLeaf;
+
+	}
+
+return nextLeaf;
+}	
 
 uint32_t PathORAM::access(uint32_t id, uint32_t position_in_id, char opType, uint8_t level, unsigned char* data_in, unsigned char* data_out, uint32_t* prev_sampled_leaf){
 	uint32_t leaf = 0;
@@ -189,7 +283,8 @@ return nextLeaf;
 
 void PathORAM::Access_temp(uint32_t id, char opType, unsigned char* data_in, unsigned char* data_out){
 	uint32_t prev_sampled_leaf=-1;
-	access(id, -1, opType, recursion_levels, data_in, data_out, &prev_sampled_leaf);
+  if (opType == 'r') access_optimized(id, -1, opType, recursion_levels, data_in, data_out, &prev_sampled_leaf);
+  else access(id, -1, opType, recursion_levels, data_in, data_out, &prev_sampled_leaf);
 }
 
 
@@ -352,37 +447,111 @@ level, uint32_t D_level, uint32_t nlevel, unsigned char* data_in, unsigned char 
 		unsigned char *old_path_hash_iter = path_hash;
 	#endif	
 
+
+  if (level == 1) {
+		  uint32_t stash_oc;
+      for (int i = 1; i <= recursion_levels; i++) {
+        // ADIL.
+			  stash_oc = recursive_stash[i].stashOccupancy();
+        // printf("Level #%d: occupancy before -- %d\n", i, stash_oc);
+     }
+  }
+
+  // ADIL.
+  printf("optimized reading\n");
+  optimized_reading = 1;
+
 	//All real blocks from Path get inserted into stash
 	//The real blocks also get their ids replaced with dummy identifier.
 	PushBlocksFromPathIntoStash(decrypted_path_ptr, level, tdata_size, tblock_size, D_level, id, position_in_id, &nextLeaf, newleaf, sampledLeaf, newleaf_nextlevel);
             
-	if(oblivious_flag) {                
-		//TODO Scan Stash and Return Block here !
-		if(level == recursion_levels){
-      printf("[ADIL] accessing the stash\n");
-			recursive_stash[recursion_levels].PerformAccessOperation(opType, id, newleaf, data_in, data_out);
-    }
-		else{
+	if(oblivious_flag) {    
+		if(level == recursion_levels) {
+			// recursive_stash[recursion_levels].PerformAccessOperation(opType, id, newleaf, data_in, data_out); 
+			recursive_stash[recursion_levels].PerformOptimizedAccessOperation(opType, id, newleaf, data_in, data_out);
+    } else {
 			OAssignNewLabelToBlock(id, position_in_id, level, newleaf, newleaf_nextlevel, &nextLeaf);
 		}
 	}
 
-  // ADIL. clearing the stash (plus debugging)
-  uint32_t stash_oc;
-	if(recursion_levels != 0){
-		stash_oc = recursive_stash[level].stashOccupancy();
-	  printf("Level : %d, Before clearing :%d\n",level,stash_oc);
-    recursive_stash[level].clear();
-		stash_oc = recursive_stash[level].stashOccupancy();
-		printf("Level : %d, After clearing  :%d\n",level,stash_oc);
-	}			
-	else{
-		stash_oc = stash.stashOccupancy();
-	  printf("Before clearing :%d\n",stash_oc);
-    stash.clear();
-		stash_oc = stash.stashOccupancy();
-		printf("After clearing  :%d\n",stash_oc);
+	if(recursion_levels!=0) {
+		if(level == recursion_levels)
+		time_report(2);
 	}
+	else 
+		time_report(2);
+
+			//time_report(4);
+
+			//Reset decrypted_path_ptr for Rebuild
+			decrypted_path_ptr = decrypted_path;
+			PathORAM_RebuildPath(decrypted_path_ptr, tdata_size, tblock_size, leaf, level, D_level, nlevel);
+			
+			#ifdef ACCESS_DEBUG
+				printf("Final Path after PathORAM_RebuildPath: \n");
+				showPath_reverse(decrypted_path, Z*(D_level+1), tdata_size);
+			#endif
+
+
+			#ifdef SHOW_STASH_COUNT_DEBUG
+				if(recursion_levels!=-1) {
+					stash_oc = recursive_stash[level].stashOccupancy();
+					printf("Level : %d , After rebuild stash_oc:%d\n",level,stash_oc);		
+				}else {
+					stash_oc = stash.stashOccupancy();
+					printf("After rebuild stash_oc:%d\n",stash_oc);							
+				}
+			#endif
+
+			#ifdef SHOW_STASH_CONTENTS
+				if(level==recursion_levels)
+					recursive_stash[level].displayStashContents(nlevel);
+			#endif
+
+			//Encrypt and Upload Path :
+			#ifdef PATH_GRANULAR_IO
+				#ifdef EXITLESS_MODE
+					*(req_struct->block) = false;			
+				#else
+					#ifdef ENCRYPTION_ON
+						encryptPath(decrypted_path, encrypted_path, (Z*(D_level+1)), tdata_size);						
+					#endif	
+
+					#ifndef PASSIVE_ADVERSARY
+						unsigned char *path_ptr;
+						new_path_hash_iter = new_path_hash;
+						new_path_hash_trail = new_path_hash;
+						old_path_hash_iter = path_hash;		
+						unsigned char *new_path_hash_ptr = new_path_hash;
+						leaf_temp_prev = (leaf+nlevel)<<1;
+						#ifdef ENCRYPTION_ON
+							path_ptr = encrypted_path;
+						#else
+							path_ptr = decrypted_path;
+						#endif
+            
+            
+            uint32_t leaf_adj = leaf + nlevel;
+            CreateNewPathHash(path_ptr, path_hash, new_path_hash, leaf_adj, data_size+ADDITIONAL_METADATA_SIZE, D_level, level);
+            
+					#endif
+		
+					// uploadPath(&rt, encrypted_path, path_size, leaf + nlevel, new_path_hash, new_path_hash_size, level, D_level);
+				#endif
+			#endif
+
+  if (level == recursion_levels) {
+		  uint32_t stash_oc;
+      for (int i = 1; i <= recursion_levels; i++) {
+        // ADIL.
+			  stash_oc = recursive_stash[i].stashOccupancy();
+        // printf("Level #%d: occupancy before -- %d\n", i, stash_oc);
+        recursive_stash[i].clear(); 
+			  stash_oc = recursive_stash[i].stashOccupancy();
+        //printf("Level #%d: occupancy after -- %d\n", i, stash_oc);
+     }
+
+  }
 
   return nextLeaf;
 }
@@ -403,6 +572,10 @@ level, uint32_t D_level, uint32_t nlevel, unsigned char* data_in, unsigned char 
 	else{
 		sampledLeaf= *((uint32_t *)random_value) % (nlevel);
 	}
+
+  // ADIL.
+  printf("Non-optimized ORAM\n");
+  optimized_reading = 0;
 
 	uint32_t tblock_size, tdata_size;
 	if(recursion_levels!=-1) {
@@ -438,13 +611,14 @@ level, uint32_t D_level, uint32_t nlevel, unsigned char* data_in, unsigned char 
 	//The real blocks also get their ids replaced with dummy identifier.
 	PushBlocksFromPathIntoStash(decrypted_path_ptr, level, tdata_size, tblock_size, D_level, id, position_in_id, &nextLeaf, newleaf, sampledLeaf, newleaf_nextlevel);
             
-	if(oblivious_flag) {                
+	if(oblivious_flag) {    
 		//TODO Scan Stash and Return Block here !
 		if(level == recursion_levels){
+			// printf("level %d == recursion_levels\n", level);
 			recursive_stash[recursion_levels].PerformAccessOperation(opType, id, newleaf, data_in, data_out);
 		  //Optional TODO : Add layer of encryption to result, such that only real client (outside server stack) can decrypt.
-    }
-		else{
+    	}else{
+			// printf("level %d != recursion_levels %d\n", level, recursion_levels);
 			OAssignNewLabelToBlock(id, position_in_id, level, newleaf, newleaf_nextlevel, &nextLeaf);
 		}
 	}

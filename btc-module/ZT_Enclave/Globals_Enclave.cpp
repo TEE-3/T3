@@ -32,6 +32,26 @@ void printf(const char *fmt, ...)
     ocall_print_string(buf);
 }
 
+void hexdump(unsigned char *a, size_t len)
+{
+    size_t i;
+    for (i = 0; i < len; i++)
+        printf("%02x", a[i]);
+    printf("\n");
+
+}
+
+void check_data(unsigned char* a, unsigned char* b, size_t len)
+{
+  size_t i;
+  for (i = 0; i < len; i++) {
+    if (a[i] != b[i]) {
+      printf("[ERR] Mismatch at %d\n", i);
+      assert(false);
+    }
+  }
+}
+
 void displaySerializedBlock( unsigned char *serialized_result_block, uint32_t level, uint32_t recursion_levels, uint32_t x)
 {
         uint32_t i = 0;

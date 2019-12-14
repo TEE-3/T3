@@ -1,0 +1,6 @@
+enclave {    
+    trusted {
+        /* define ECALLs here. */
+        public int sendRawTxList(uint32_t instance_id, uint8_t oram_type, uint32_t max_blocks, [in, size=len]unsigned char* tx, size_t len, size_t numTxs, [in, size=80]unsigned char* blockheader, uint32_t blockheight, uint32_t ORAM_block_size);
+    };
+};

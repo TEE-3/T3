@@ -26,6 +26,9 @@
 
 */
 
+// ADIL.
+bool optimized_reading = 0;
+
 //Other Functions needed :
 /*
 1) getID()
@@ -47,7 +50,60 @@ void Stash::setParams(uint32_t param_stash_data_size, uint32_t param_STASH_SIZE,
 	STASH_SIZE = param_STASH_SIZE;
 	gN = param_gN;
 }
+
+// ADIL.
+void Stash::PerformOptimizedAccessOperation(char opType, uint32_t id, uint32_t newleaf,
+unsigned char *data_in, unsigned char *data_out)
+{
+	struct nodev2 *iter = getStart();
+	uint8_t cntr = 1;
+	uint32_t flag_id = 0, flag_w = 0, flag_r = 0;
+	unsigned char *data_ptr;
+	uint32_t *leaflabel_ptr;
+
+  bool flag_found = false;
     
+	#ifdef RESULTS_DEBUG
+		printf("Before PerformAccess, datasize = %d, Fetched Data :", stash_data_size);
+		for(uint32_t j=0; j < stash_data_size;j++){
+		    printf("%c", data_out[j]);
+		}
+		printf("\n");
+	#endif
+
+	while(iter&&cntr<=STASH_SIZE)	{
+		data_ptr = (unsigned char*) getDataPtr(iter->serialized_block);
+		leaflabel_ptr = getTreeLabelPtr(iter->serialized_block);
+		flag_id = ( getId(iter->serialized_block) == id);
+			if(flag_id == true){
+				flag_found = true;
+				//setTreeLabel(iter->serialized_block,newleaf);
+				printf("\n");
+			}
+
+		//Replace leaflabel in block with newleaf
+		// oassign_newlabel(leaflabel_ptr, newleaf, flag_id);
+		// omove_buffer(leaflabel_ptr, &newleaf, ID_SIZE_IN_BYTES, flag_id);
+		flag_w = (flag_id && opType == 'w');
+		omove_buffer((unsigned char*) data_ptr, data_in, stash_data_size, flag_w);
+		flag_r = (flag_id && opType == 'r');
+		omove_buffer(data_out, (unsigned char*) data_ptr, stash_data_size, flag_r);
+
+		iter = iter->next;
+		cntr++;
+	}
+	#ifdef RESULTS_DEBUG
+	printf("After PerformAccess, datasize = %d, Fetched Data :", stash_data_size);
+	for(uint32_t j=0; j < stash_data_size;j++){
+	    printf("%c", data_out[j]);
+	}
+	printf("\n");
+	#endif
+	if(flag_found == false){
+	    printf("BLOCK NOT FOUND IN STASH\n");
+	}
+}
+ 
 void Stash::PerformAccessOperation(char opType, uint32_t id, uint32_t newleaf, unsigned char *data_in, unsigned char *data_out){
 	struct nodev2 *iter = getStart();
 	uint8_t cntr = 1;
@@ -297,10 +353,34 @@ void Stash::remove(nodev2 *ptr, nodev2 *prev_ptr)
 // ADIL. clear the stash contents
 void Stash::clear()
 {
-  start = NULL;
-  current_size = 0;
-  printf("[ADIL]. Resetting the stash\n");
-  setup(STASH_SIZE, stash_data_size, gN);
+  Block block(stash_data_size, gN);
+  struct nodev2 *iter = start;
+  uint8_t cntr = 1;
+  while (iter&&cntr<=STASH_SIZE) {
+    if (iter->discard_block == true) {
+      iter->serialized_block = block.serialize(stash_data_size);
+      iter->discard_block = false;
+      current_size--;
+    }
+    iter=iter->next;
+    cntr++;
+  }
+}
+
+void Stash::removeBlock(int id)
+{
+  struct nodev2 *prev = NULL;
+  struct nodev2 *iter = start;
+  uint8_t cntr = 1;
+  while (iter&&cntr<=STASH_SIZE) {
+    if (getId(iter->serialized_block) == id) {
+      remove(iter, prev);
+      return;
+    }
+    iter=iter->next;
+    prev=iter;
+    cntr++;
+  }
 }
 
 void Stash::pass_insert(unsigned char *serialized_block, bool is_dummy)
@@ -316,7 +396,21 @@ void Stash::pass_insert(unsigned char *serialized_block, bool is_dummy)
         #ifdef PATHORAM_STASH_OVERFLOW_DEBUG
             inserted = inserted || flag;
         #endif
-        stash_serialized_insert(iter->serialized_block, serialized_block, stash_data_size, flag, &block_written);
+        stash_serialized_insert(iter->serialized_block, serialized_block, stash_data_size, flag, &block_written); 
+	  	  if (flag && (optimized_reading == 1)) {
+          iter->discard_block = true;
+        }
+  		  // ADIL
+      /*
+	  	  if (!is_dummy && (isBlockDummy(iter->serialized_block, gN)) && !block_written) {
+		  	  unsigned char* from = (unsigned char*) ((unsigned long) serialized_block + 24);
+			    unsigned char* to = (unsigned char*) ((unsigned long) iter->serialized_block + 24);
+			    memcpy(to, from, stash_data_size);
+			    block_written = 1;
+			    setId(iter->serialized_block, getId(serialized_block));
+			    setTreeLabel(iter->serialized_block, getTreeLabel(serialized_block));
+		    }
+      */
         iter = iter->next;
         cntr++;
     }

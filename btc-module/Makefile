@@ -49,12 +49,16 @@ else
 endif
 
 ZT_LIBRARY_PATH := ./btc_enclave/
-App_Cpp_Files := ZT_Untrusted/App.cpp ZT_Untrusted/LocalStorage.cpp ZT_Untrusted/RandomRequestSource.cpp
+App_Cpp_Files := ZT_Untrusted/App.cpp ZT_Untrusted/LocalStorage.cpp ZT_Untrusted/RandomRequestSource.cpp ZT_Untrusted/sgx_utils/sgx_utils.cpp
 Enclave_Asm_Files := ZT_Enclave/oblock.asm ZT_Enclave/pmap.asm ZT_Enclave/rebuild.asm
 Enclave_Asm_Objects := $(Enclave_Asm_Files:.asm=.o)
 App_Include_Paths := -IInclude -I$(UNTRUSTED_DIR) -IApp -I$(SGX_SDK)/include
 
 App_C_Flags := $(SGX_COMMON_CFLAGS) -fPIC -Wno-attributes $(App_Include_Paths)
+
+ifneq ($(ORAM_TESTING), 1)
+   ORAM_TESTING := 0
+endif
 
 # Three configuration modes - Debug, prerelease, release
 #   Debug - Macro DEBUG enabled.
@@ -97,8 +101,7 @@ endif
 Crypto_Library_Name := sgx_tcrypto
 services_lib = /home/ssasy/Projects/oram_tester/eleos/eleos_core/trustedlib_lib_services
 
-Enclave_Cpp_Files := ZT_Enclave/Globals_Enclave.cpp ZT_Enclave/ZT_Enclave.cpp ZT_Enclave/Block.cpp ZT_Enclave/Bucket.cpp ZT_Enclave/Stash.cpp ZT_Enclave/ORAMTree.cpp ZT_Enclave/PathORAM_Enclave.cpp ZT_Enclave/CircuitORAM_Enclave.cpp
-#$(wildcard ZT_Enclave/Edger8rSyntax/*.cpp) $(wildcard ZT_Enclave/TrustedLibrary/*.cpp)
+Enclave_Cpp_Files := ZT_Enclave/Globals_Enclave.cpp ZT_Enclave/ZT_Enclave.cpp ZT_Enclave/crypto/ripemd160.cpp ZT_Enclave/reducer/reducer.cpp ZT_Enclave/Block.cpp ZT_Enclave/Bucket.cpp ZT_Enclave/Stash.cpp ZT_Enclave/ORAMTree.cpp ZT_Enclave/PathORAM_Enclave.cpp ZT_Enclave/CircuitORAM_Enclave.cpp ZT_Enclave/oram-testing/test_enclave.cpp
 Enclave_Include_Paths := -IInclude -IEnclave -I$(SGX_SDK)/include -I$(SGX_SDK)/include/libcxx -I$(SGX_SDK)/include/tlibc -I$(SGX_SDK)/include/stlport 
 #-I$(services_lib)/static_trusted -I$(services_lib)/common
 
@@ -218,7 +221,7 @@ $(App_Name): ZT_Untrusted/Enclave_u.o $(App_Cpp_Objects)
 	@$(CXX) $^ -shared -o libZT.so $(App_Link_Flags)
 	@echo "LINK =>  $@"
 	cp libZT.so btc_Untrusted/
-	$(MAKE) -C btc_Untrusted/
+	$(MAKE) ORAM_TESTING=$(ORAM_TESTING) -C btc_Untrusted/
 
 .config_$(Build_Mode)_$(SGX_ARCH):
 	@rm -f .config_* $(App_Name) $(Enclave_Name) $(Signed_Enclave_Name) $(App_Cpp_Objects) ZT_Untrusted/Enclave_u.* $(Enclave_Cpp_Objects) ZT_Enclave/Enclave_t.*

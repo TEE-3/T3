@@ -40,6 +40,8 @@
 
 #include "sgx_error.h"       /* sgx_status_t */
 #include "sgx_eid.h"     /* sgx_enclave_id_t */
+#include "sgx_urts.h"
+#include "sgx_utils/sgx_utils.h"
 
 #include <stdio.h>
 #include <iostream>

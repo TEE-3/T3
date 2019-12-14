@@ -48,6 +48,13 @@ FILE *iquery_file;
 #define PRINT_REQ_DETAILS 1
 #define DEBUG_PRINT 1
 
+std::string username = "haas256";
+std::string password = "12345678";
+std::string address  = "10.186.98.166"; 
+// std::string address  = "25.51.2.246"; 
+int port = 8332;
+BitcoinAPI btc(username, password, address, port);
+
 double time_taken(timespec *start, timespec *end){
 	long seconds, nseconds;
 	seconds = end->tv_sec - start->tv_sec;
@@ -331,13 +338,142 @@ struct node{
 	struct node *left, *right;
 };
 
+
+/* OCall functions */
+void ocall_print_string(const char *str) {
+    /* Proxy/Bridge will check the length and null-terminate 
+     * the input string to prevent buffer overflow. 
+     */
+    printf("%s", str);
+}
+
 void hexdump(unsigned char *a, size_t len)
 {
-	size_t i;
-	for (i = 0; i < len; i++)
-		printf("%02x", a[i]);
-	printf("\n");
+    size_t i;
+    for (i = 0; i < len; i++)
+        printf("%02x", a[i]);
+    printf("\n");
 }
+
+bool StringToHex(const std::string &inStr, uint8_t *outStr)
+{
+    size_t len = inStr.length();
+    for (size_t i = 0; i < len; i += 2) {
+        sscanf(inStr.c_str() + i, "%2hhx", outStr);
+        ++outStr;        
+    }
+    return true;
+}
+
+std::string reverse_pairs(std::string const & src)
+{
+    assert(src.size() % 2 == 0);
+    std::string result;
+    result.reserve(src.size());
+
+    for (std::size_t i = src.size(); i != 0; i -= 2)
+    {
+        result.append(src, i - 2, 2);
+    }
+    return result;
+}
+/*
+BitcoinAPI callBitcoinDaemon()
+{
+	std::string username = "haas256";
+    std::string password = "12345678";
+    std::string address  = "10.186.98.166";
+    int port = 8332;
+    BitcoinAPI btc(username, password, address, port);
+	return btc;    
+}
+*/
+
+blockinfo_t getLatestBitcoinBlock()
+{
+	
+	// get current number of Bitcoin blocks
+	int blockcount = btc.getblockcount();
+
+	// get the latest block
+	std::string blockHash = btc.getblockhash(blockcount);
+
+	// get block 	
+	blockinfo_t currentBlock = btc.getblock(blockHash, 2);        
+
+	return currentBlock;
+}
+
+blockinfo_t getBitcoinBlock(int block)
+{	
+	// get the block hash
+	std::string blockHash = btc.getblockhash(block);  
+
+	// get block 
+	blockinfo_t currentBlock = btc.getblock(blockHash, 2);        
+
+	return currentBlock;	
+}
+
+void getTxList(blockinfo_t currentBlock, size_t numOfTxs, unsigned char * txsListChar)
+{
+	uint32_t offset=0;
+        
+	for(size_t i=0; i< numOfTxs; i++)
+	{
+		std::stringstream txlen;
+		txlen << std::setfill ('0') << std::setw(8) << std::hex << currentBlock.tx[i].length()/2;
+		StringToHex(txlen.str(), &txsListChar[offset]);
+		offset+=4;
+		StringToHex(currentBlock.tx[i], &txsListChar[offset]);
+		offset+=currentBlock.tx[i].length()/2;
+	}   
+}
+
+bool getBitcoinBlockHeader(blockinfo_t currentBlock, uint8_t * blockheader)
+{
+	printf("[+] Parsing Header\n");
+	/*******************************************************************/
+	//TODO clean this code
+	// get block header
+	// nVersion||HashPrevBlock||HashMerkleRoot||nTime||nBits||nNonce
+	std::stringstream blkheader;
+	std::stringstream bitcoinHeader;
+	// blkheader = nVersion 
+	blkheader     << std::setfill ('0') << std::setw(8) << std::hex << currentBlock.version;
+	// bitcoinHeader = reverse(blkheader) = reverse(nVersion) 
+	bitcoinHeader << reverse_pairs(blkheader.str());
+	// blkheader = ""
+	blkheader.str(std::string());
+	// bitcoinHeader = reverse(blkheader) = reverse(nVersion)||reverse(previousblockhash)||reverse(merkleroot)
+	//                                            4                       32                       32
+	bitcoinHeader << reverse_pairs(currentBlock.previousblockhash);
+	bitcoinHeader << reverse_pairs(currentBlock.merkleroot) ;
+	// blkheader = time 
+	blkheader     << std::setfill ('0') << std::setw(8) << std::hex << currentBlock.time;
+	// bitcoinHeader = reverse(blkheader) = reverse(nVersion)||reverse(previousblockhash)||reverse(merkleroot)|| reverse(time) 
+	//                                            4                       32                       32                4
+	bitcoinHeader << reverse_pairs(blkheader.str());
+	// blkheader = ""
+	blkheader.str(std::string());
+	// bitcoinHeader = reverse(blkheader) = reverse(nVersion)||reverse(previousblockhash)||reverse(merkleroot)|| reverse(time) || reverse(bit)
+	//                                            4                       32                       32                4               4
+	bitcoinHeader << reverse_pairs(currentBlock.bits);
+
+	// blkheader = nonce    
+	blkheader     << std::setfill ('0') << std::setw(8) << std::hex << currentBlock.nonce;
+	// bitcoinHeader = reverse(blkheader) = reverse(nVersion)||reverse(previousblockhash)||reverse(merkleroot)|| reverse(time) || reverse(bit) || reverse(nonce)
+	//                                            4                       32                       32                4               4                  4
+	bitcoinHeader << reverse_pairs(blkheader.str());
+	// blkheader = ""
+	blkheader.str(std::string());
+	/***********************************************************************************************************/
+
+	StringToHex(bitcoinHeader.str(), blockheader);
+
+	return true;
+}
+
 
 uint32_t makeBlockID(unsigned char *pkh){
 	unsigned char *hash = (unsigned char*) malloc(32);
@@ -346,8 +482,9 @@ uint32_t makeBlockID(unsigned char *pkh){
 	return num % 2097152; 
 }
 
-
-int main(int argc, char *argv[]) {
+/*
+int main(int argc, char *argv[]) 
+{
 	getParams(argc, argv);
 
 	ZT_Initialize();
@@ -372,13 +509,13 @@ int main(int argc, char *argv[]) {
 	tag_out = (unsigned char*) malloc (TAG_SIZE);
 	data_in = (unsigned char*) malloc (data_size);
 
-	/*	
-	*	-----------------------------------------------------------------
-	* 	LZ: Loading UTXO file
-	*	The file is designed to contain blocks of data_size bytes and all 
-	*	transactions in a single block have the same pkh.
-	*	-----------------------------------------------------------------
-	*/	
+		
+	// *	-----------------------------------------------------------------
+	// * 	LZ: Loading UTXO file
+	// *	The file is designed to contain blocks of data_size bytes and all 
+	// *	transactions in a single block have the same pkh.
+	// *	-----------------------------------------------------------------
+		
 
 	FILE *utxo_fd;
 	int r;
@@ -399,7 +536,7 @@ int main(int argc, char *argv[]) {
 
 	//TODO: Patch this along with instances patch		
 	uint32_t instance_id = 0;	
-  int curUtxo = 0;
+  	int curUtxo = 0;
 
 	//LZ: this loop reads from the file utxo_fd until there's no more data to read (end of file)
 	while(fread(data_in, data_size, 1, utxo_fd)!=0 && curUtxo<WriteUtxoNum){
@@ -413,9 +550,8 @@ int main(int argc, char *argv[]) {
 		generate_request_start = clock();
 		
 		//Get pkh and use it as the id of the request
-		unsigned char *pkh= (unsigned char*) malloc(PKH_SIZE_IN_BYTES);
-		memcpy(pkh, &data_in[44], PKH_SIZE_IN_BYTES );		
-
+		unsigned char pkh[PKH_SIZE_IN_BYTES];
+		memcpy(&pkh[0], &data_in[44], PKH_SIZE_IN_BYTES);
 		uint32_t id = makeBlockID(pkh);
 		printf("pkh_id: %u\n", id);
 
@@ -507,5 +643,76 @@ int main(int argc, char *argv[]) {
 
 	return 0;
 }
+*/
 
+int main(int argc, char *argv[]) {
+
+	getParams(argc, argv);
+
+	ZT_Initialize();
+	uint32_t zt_id = ZT_New(max_blocks, data_size, stash_size, oblivious, recursion_data_size, oram_type, Z);
+
+#ifdef ORAM_TESTING
+  // ADIL.
+  printf("Testing the ORAM implementation\n");
+  test_ORAM(0, oram_type, data_size);
+#else
+
+	// Variable declarations
+	clock_t start,end,tclock;	
+	uint32_t WriteUtxoNum = 2; //LZ: number of write accesses
+	uint32_t ReadUtxoNum = 2;  //LZ: number of read accesses (for testing)
+	
+	// request_size = ID_SIZE_IN_BYTES + data_size;
+  uint32_t request_size = PKH_SIZE_IN_BYTES + data_size;
+	uint32_t encrypted_request_size = computeCiphertextSize(data_size);
+
+	response_size = data_size;
+	data_out = (unsigned char*) malloc (data_size);
+
+	start = clock();
+
+	#ifdef DEBUG_PRINT	
+		printf("(Step #1). Writing UTXOs into the ORAM Tree\n");
+	#endif
+
+	//TODO: Patch this along with instances patch		
+	uint32_t instance_id = 0;	
+  	int curUtxo = 0;
+
+	for(int block = 0; block <= 0; block++)
+    {		
+		blockinfo_t currentBlock = getBitcoinBlock(requestlength);
+		// blockinfo_t currentBlock = getLatestBitcoinBlock();
+
+		unsigned char b[4];
+		memcpy(&b[0], &currentBlock.height, 4);        
+
+		printf("Block #%d\n", currentBlock.height);
+
+		hexdump(&b[0], 4);
+
+		// get number of transactions
+		size_t numOfTxs = currentBlock.tx.size();
+
+		size_t  listLen = currentBlock.size + 4*numOfTxs;
+		unsigned char * txsListChar = (uint8_t*) malloc(listLen);
+		getTxList(currentBlock, numOfTxs, txsListChar);
+
+		uint8_t blockheader[80];
+		getBitcoinBlockHeader(currentBlock, &blockheader[0]);
+
+
+		Red_SendRawTxList(instance_id, oram_type, max_blocks, txsListChar, listLen, numOfTxs, blockheader, (uint32_t) currentBlock.height, data_size);
+        
+        free(txsListChar);
+
+        printf("\n----------------------------------------------------------------\n");
+	}
+
+#endif
+
+	return 0;	
+
+}
 

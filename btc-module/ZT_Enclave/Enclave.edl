@@ -50,6 +50,8 @@ enclave {
     from "TrustedLibrary/Thread.edl" import *;
 */
 
+    from "reducer/reducer.edl" import *;
+
 	trusted {
 		// public int8_t setEnclaveParams(uint32_t maxBlocks, uint32_t stashSize, uint32_t dataSize, uint32_t non_oblivious, uint32_t recursion_blockSize, uint32_t oram_type);
 		public uint32_t createNewORAMInstance(uint32_t maxBlocks, uint32_t dataSize, uint32_t stashSize, uint32_t oblivious_flag, uint32_t recursion_data_size, int8_t recursion_levels, uint64_t onchip_posmap_mem_limit, uint32_t oram_type, uint8_t pZ);
@@ -63,6 +65,10 @@ enclave {
 		public uint32_t storePosmapMerkleRoot([out,size = posmap_size] unsigned char* posmap, uint32_t posmap_size, [out,size = hash_and_key_size] unsigned char* merkle_root_and_aes_key, uint32_t hash_and_key_size);
 		public uint32_t storeStashLevel([in,size = stash_size] unsigned char* stash, uint32_t stash_size, uint32_t level);
 		*/
+
+    // ADIL.
+    public void ORAM_testing(uint32_t instance_id, uint8_t oram_type, uint32_t ORAM_block_size);
+
 	};
     /* 
      * ocall_print_string - invokes OCALL to display string buffer inside the enclave.

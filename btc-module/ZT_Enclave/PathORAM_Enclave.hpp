@@ -38,6 +38,10 @@
 		void Initialize(uint8_t pZ, uint32_t pmax_blocks, uint32_t pdata_size, uint32_t pstash_size, uint32_t poblivious_flag, uint32_t precursion_data_size, int8_t precursion_levels, uint64_t onchip_posmap_mem_limit);
 		void Access_temp(uint32_t id, char opType, unsigned char* data_in, unsigned char* data_out);	
 		uint32_t access(uint32_t id, uint32_t position_in_id, char opType, uint8_t level, unsigned char* data_in, unsigned char* data_out, uint32_t *prev_sampled_leaf);			
+
+    // ADIL.
+		uint32_t access_optimized(uint32_t id, uint32_t position_in_id, char opType, uint8_t level, unsigned char* data_in, unsigned char* data_out, uint32_t *prev_sampled_leaf);			
+
 		uint32_t access_oram_level(char opType, uint32_t leaf, uint32_t id, uint32_t position_in_id, uint32_t level, uint32_t newleaf,uint32_t newleaf_nextleaf, unsigned char *data_in,  unsigned char *data_out);
 
 		//TODO: Defining body for virtual functions FAIL. (Current workaround for Access =  Access_temp + PathORAM_Access, for Create = Initialize)
