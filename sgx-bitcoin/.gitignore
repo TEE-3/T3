@@ -1,0 +1,3 @@
+*.o
+/linux-sgx-driver/*
+/linux-sgx/*

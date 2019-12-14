@@ -1,0 +1,290 @@
+@inproceedings{Goldreich:1987,
+ author = {Goldreich, O.},
+ title = {Towards a Theory of Software Protection and Simulation by Oblivious RAMs},
+ booktitle = {Proceedings of the Nineteenth Annual ACM Symposium on Theory of Computing},
+ series = {STOC '87},
+ year = {1987},
+ isbn = {0-89791-221-7},
+ location = {New York, New York, USA},
+ pages = {182--194},
+ numpages = {13},
+ url = {http://doi.acm.org/10.1145/28395.28416},
+ doi = {10.1145/28395.28416},
+ acmid = {28416},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+} 
+@inproceedings{Stefanov:2013,
+ author = {Stefanov, Emil and van Dijk, Marten and Shi, Elaine and Fletcher, Christopher and Ren, Ling and Yu, Xiangyao and Devadas, Srinivas},
+ title = {Path ORAM: An Extremely Simple Oblivious RAM Protocol},
+ booktitle = {Proceedings of the 2013 ACM SIGSAC Conference on Computer; Communications Security},
+ series = {CCS '13},
+ year = {2013},
+ isbn = {978-1-4503-2477-9},
+ location = {Berlin, Germany},
+ pages = {299--310},
+ numpages = {12},
+ url = {http://doi.acm.org/10.1145/2508859.2516660},
+ doi = {10.1145/2508859.2516660},
+ acmid = {2516660},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+ keywords = {access pattern, oblivious ram, oram, path oram},
+}
+@inproceedings {Arnautov-epc,
+author = {Sergei Arnautov and Bohdan Trach and Franz Gregor and Thomas Knauth and Andre Martin and Christian Priebe and Joshua Lind and Divya Muthukumaran and Dan O{\textquoteright}Keeffe and Mark L. Stillwell and David Goltzsche and Dave Eyers and R{\"u}diger Kapitza and Peter Pietzuch and Christof Fetzer},
+title = {{SCONE}: Secure Linux Containers with Intel {SGX}},
+booktitle = {12th {USENIX} Symposium on Operating Systems Design and Implementation ({OSDI} 16)},
+year = {2016},
+isbn = {978-1-931971-33-1},
+address = {Savannah, GA},
+pages = {689--703},
+publisher = {{USENIX} Association},
+}
+
+@InProceedings{Elaine-rORAM,
+author="Shi, Elaine
+and Chan, T. -H. Hubert
+and Stefanov, Emil
+and Li, Mingfei",
+editor="Lee, Dong Hoon
+and Wang, Xiaoyun",
+title="Oblivious RAM with O((logN)3) Worst-Case Cost",
+booktitle="Advances in Cryptology -- ASIACRYPT 2011",
+year="2011",
+publisher="Springer Berlin Heidelberg",
+address="Berlin, Heidelberg",
+pages="197--214",
+abstract="Oblivious RAM is a useful primitive that allows a client to hide its data access patterns from an untrusted server in storage outsourcing applications. Until recently, most prior works on Oblivious RAM aim to optimize its amortized cost, while suffering from linear or even higher worst-case cost. Such poor worst-case behavior renders these schemes impractical in realistic settings, since a data access request can occasionally be blocked waiting for an unreasonably large number of operations to complete.",
+isbn="978-3-642-25385-0"
+}
+
+
+@inproceedings{Gervais:2014:SPV-privacy,
+ author = {Gervais, Arthur and Capkun, Srdjan and Karame, Ghassan O. and Gruber, Damian},
+ title = {On the Privacy Provisions of Bloom Filters in Lightweight Bitcoin Clients},
+ booktitle = {Proceedings of the 30th Annual Computer Security Applications Conference},
+ series = {ACSAC '14},
+ year = {2014},
+ isbn = {978-1-4503-3005-3},
+ location = {New Orleans, Louisiana, USA},
+ pages = {326--335},
+ numpages = {10},
+ url = {http://doi.acm.org/10.1145/2664243.2664267},
+ doi = {10.1145/2664243.2664267},
+ acmid = {2664267},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+} 
+
+@MISC{Nakamoto_bitcoin:a,
+author = {Satoshi Nakamoto},
+title = {Bitcoin: A peer-to-peer electronic cash system,” http://bitcoin.org/bitcoin.pdf},
+year = {}
+}
+
+@MISC{BIP37,
+author = {Mike Hearn, Matt Corallo},
+title = {Connection Bloom filtering},
+year = {2012},
+url = {https://github.com/\\bitcoin/bips/blob/master/bip-0037.mediawiki}
+}
+
+@MISC{sgx-explained,
+    author = {Victor Costan and Srinivas Devadas},
+    title = {Intel SGX Explained},
+    howpublished = {Cryptology ePrint Archive, Report 2016/086},
+    year = {2016},
+    note = {\url{https://eprint.iacr.org/2016/086}},
+}
+
+@MISC{spv-dos,
+  title={Could SPV Support a Billion Bitcoin Users? Sizing up a Scaling Claim},
+  url={https://www.coindesk.com/spv-support-billion-\\bitcoin-users-sizing-scaling-claim/},
+  year={2017}
+}
+
+@inproceedings{Xu15ControlledChannel,
+Author = {Yuanzhong Xu and Weidong Cui and Marcus Peinado},
+Title = {{Controlled-Channel} Attacks: Deterministic Side Channels for Untrusted Operating Systems},
+Booktitle = {S\&P (Oakland)},
+Year = {2015}
+}
+@InProceedings{asyncshock,
+author="Weichbrodt, Nico
+and Kurmus, Anil
+and Pietzuch, Peter
+and Kapitza, R{\"u}diger",
+editor="Askoxylakis, Ioannis
+and Ioannidis, Sotiris
+and Katsikas, Sokratis
+and Meadows, Catherine",
+title="AsyncShock: Exploiting Synchronisation Bugs in Intel SGX Enclaves",
+booktitle="Computer Security -- ESORICS 2016",
+year="2016",
+publisher="Springer International Publishing",
+address="Cham",
+pages="440--457",
+abstract="Intel's Software Guard Extensions (SGX) provide a new hardware-based trusted execution environment on Intel CPUs using secure enclaves that are resilient to accesses by privileged code and physical attackers. Originally designed for securing small services, SGX bears promise to protect complex, possibly cloud-hosted, legacy applications. In this paper, we show that previously considered harmless synchronisation bugs can turn into severe security vulnerabilities when using SGX. By exploiting use-after-free and time-of-check-to-time-of-use (TOCTTOU) bugs in enclave code, an attacker can hijack its control flow or bypass access control.",
+isbn="978-3-319-45744-4"
+}
+
+@article{BrasserMDKCS17,
+author    = {Ferdinand Brasser and
+           Urs M{\"{u}}ller and
+           Alexandra Dmitrienko and
+           Kari Kostiainen and
+           Srdjan Capkun and
+           Ahmad{-}Reza Sadeghi},
+title     = {Software Grand Exposure: {SGX} Cache Attacks Are Practical},
+journal   = {CoRR},
+volume    = {abs/1702.07521},
+year      = {2017},
+url       = {http://arxiv.org/abs/1702.07521},
+archivePrefix = {arXiv},
+eprint    = {1702.07521},
+timestamp = {Wed, 07 Jun 2017 14:40:46 +0200},
+biburl    = {https://dblp.org/rec/bib/journals/corr/BrasserMDKCS17},
+bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+@inproceedings {hid-sgx-sidechannel-usenix17,
+author = {Jaehyuk Lee and Jinsoo Jang and Yeongjin Jang and Nohyun Kwak and Yeseul Choi and Changho Choi and Taesoo Kim and Marcus Peinado and Brent ByungHoon Kang},
+title = {Hacking in Darkness: Return-oriented Programming against Secure Enclaves},
+booktitle = {26th {USENIX} Security Symposium ({USENIX} Security 17)},
+year = {2017},
+isbn = {978-1-931971-40-9},
+address = {Vancouver, BC},
+pages = {523--539},
+publisher = {{USENIX} Association},
+}
+
+@inproceedings {shadow-branch-lee-usenix17,
+author = {Sangho Lee and Ming-Wei Shih and Prasun Gera and Taesoo Kim and Hyesoon Kim and Marcus Peinado},
+title = {Inferring Fine-grained Control Flow Inside {SGX} Enclaves with Branch Shadowing},
+booktitle = {26th {USENIX} Security Symposium ({USENIX} Security 17)},
+year = {2017},
+isbn = {978-1-931971-40-9},
+address = {Vancouver, BC},
+pages = {557--574},
+publisher = {{USENIX} Association},
+}
+
+@article{DH-keyexchange,
+ author = {Diffie, W. and Hellman, M.},
+ title = {New Directions in Cryptography},
+ journal = {IEEE Trans. Inf. Theor.},
+ issue_date = {November 1976},
+ volume = {22},
+ number = {6},
+ month = sep,
+ year = {2006},
+ issn = {0018-9448},
+ pages = {644--654},
+ numpages = {11},
+ url = {http://dx.doi.org/10.1109/TIT.1976.1055638},
+ doi = {10.1109/TIT.1976.1055638},
+ acmid = {2269104},
+ publisher = {IEEE Press},
+ address = {Piscataway, NJ, USA},
+}
+
+@misc{analysis-of-utxo,
+    author = {Sergi Delgado-Segura and Cristina Pérez-Solà and Guillermo Navarro-Arribas and Jordi Herrera-Joancomartí},
+    title = {Analysis of the Bitcoin UTXO set},
+    howpublished = {Cryptology ePrint Archive, Report 2017/1095},
+    year = {2017},
+    note = {\url{https://eprint.iacr.org/2017/1095}},
+}
+
+@inproceedings {racoon,
+author = {Ashay Rane and Calvin Lin and Mohit Tiwari},
+title = {Raccoon: Closing Digital Side-Channels through Obfuscated Execution},
+booktitle = {24th {USENIX} Security Symposium ({USENIX} Security 15)},
+year = {2015},
+isbn = {978-1-931971-232},
+address = {Washington, D.C.},
+pages = {431--446},
+url = {https://www.usenix.org/conference/usenixsecurity15/technical-sessions/presentation/rane},
+publisher = {{USENIX} Association},
+}
+
+@InProceedings{scaling-blockchain-3-7,
+author="Croman, Kyle
+and Decker, Christian
+and Eyal, Ittay
+and Gencer, Adem Efe
+and Juels, Ari
+and Kosba, Ahmed
+and Miller, Andrew
+and Saxena, Prateek
+and Shi, Elaine
+and G{\"u}n Sirer, Emin
+and Song, Dawn
+and Wattenhofer, Roger",
+editor="Clark, Jeremy
+and Meiklejohn, Sarah
+and Ryan, Peter Y.A.
+and Wallach, Dan
+and Brenner, Michael
+and Rohloff, Kurt",
+title="On Scaling Decentralized Blockchains",
+booktitle="Financial Cryptography and Data Security",
+year="2016",
+publisher="Springer Berlin Heidelberg",
+address="Berlin, Heidelberg",
+pages="106--125",
+abstract="The increasing popularity of blockchain-based cryptocurrencies has made scalability a primary and urgent concern. We analyze how fundamental and circumstantial bottlenecks in Bitcoin limit the ability of its current peer-to-peer overlay network to support substantially higher throughputs and lower latencies. Our results suggest that reparameterization of block size and intervals should be viewed only as a first increment toward achieving next-generation, high-load blockchain protocols, and major advances will additionally require a basic rethinking of technical approaches. We offer a structured perspective on the design space for such approaches. Within this perspective, we enumerate and briefly discuss a number of recently proposed protocol ideas and offer several new ideas and open challenges.",
+isbn="978-3-662-53357-4"
+}
+
+
+@INPROCEEDINGS{taostore,
+author = {C. Sahin and V. Zakhary and A. E. Abbadi and H. Lin and S. Tessaro},
+booktitle = {2016 IEEE Symposium on Security and Privacy (SP)},
+title = {TaoStore: Overcoming Asynchronicity in Oblivious Data Storage},
+year = {2016},
+volume = {00},
+number = {},
+pages = {198-217},
+keywords={Servers;Cloud computing;Cryptography;Concurrent computing;Vegetation;Throughput},
+doi = {10.1109/SP.2016.20},
+url = {doi.ieeecomputersociety.org/10.1109/SP.2016.20},
+ISSN = {2375-1207},
+month={May}
+}
+
+@inproceedings{curious,
+ author = {Bindschaedler, Vincent and Naveed, Muhammad and Pan, Xiaorui and Wang, XiaoFeng and Huang, Yan},
+ title = {Practicing Oblivious Access on Cloud Storage: The Gap, the Fallacy, and the New Way Forward},
+ booktitle = {Proceedings of the 22Nd ACM SIGSAC Conference on Computer and Communications Security},
+ series = {CCS '15},
+ year = {2015},
+ isbn = {978-1-4503-3832-5},
+ location = {Denver, Colorado, USA},
+ pages = {837--849},
+ numpages = {13},
+ url = {http://doi.acm.org/10.1145/2810103.2813649},
+ doi = {10.1145/2810103.2813649},
+ acmid = {2813649},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+ keywords = {ORAM, access pattern, oblivious cloud storage, oblivious ram},
+} 
+
+@misc{btc-reference,
+  title={bitcoin developer reference},
+  url={https://bitcoin.org/en/\\developer-reference}
+}
+
+@INPROCEEDINGS{roche-voram, 
+author={D. S. Roche and A. Aviv and S. G. Choi}, 
+booktitle={2016 IEEE Symposium on Security and Privacy (SP)}, 
+title={A Practical Oblivious Map Data Structure with Secure Deletion and History Independence}, 
+year={2016}, 
+volume={}, 
+number={}, 
+pages={178-197}, 
+keywords={data privacy;random-access storage;security of data;tree data structures;Web services;Amazon Web services;privacy;value map;key map;oblivious data structure;HIRB tree;history-independent data structure;vORAM;variable-sized storage blocks;oblivious RAM;deletion security;map data structure;History;Data structures;Vegetation;Servers;Cloud computing;Security;Random access memory}, 
+doi={10.1109/SP.2016.19}, 
+ISSN={2375-1207}, 
+month={May},}

@@ -1,0 +1,122 @@
+%!TEX root = main.tex
+\section{Preliminaries} % (fold)
+\label{sec:preliminaries}
+
+\subsection{Oblivious Random Access Memory} % (fold)
+\label{sub:oblivious_ram}
+Oblivious Random Access Memory (ORAM) concept was first introduced by Goldreich et al~\cite{Goldreich:1987} for software protection against piracy. The main idea of ORAM is to hide the access patterns resulted by reading and writing accesses on encrypted data. The security of ORAM can be described as
+\begin{definition}~\cite{Stefanov:2013}
+	Let
+	$\stackrel{\rightarrow}{y}=(\mathsf{op_i,a_i,data_i})_{i\in [n]}$
+	denote a sequence of accesses 
+	where $\mathsf{op_i}\in \mathsf{\{read,write\}}$, 
+	$\mathsf{a_i}$ is the identifier, 
+	and $\mathsf{data_i}$ denotes the data being written. 
+	For an ORAM scheme $\Sigma$, let $\mathsf{Access}_{\Sigma}(\stackrel{\rightarrow}{y})$ denote a sequence of physical accesses pattern on encrypted data produced by $\stackrel{\rightarrow}{y}$.
+	We say:
+	\begin{enumerate}
+	  	\item The scheme $\Sigma$ is secure if for any two sequences of accesses $\stackrel{\rightarrow}{x}$ and $\stackrel{\rightarrow}{y}$ of the same length, $\PAccess{\ORequest{x}}$ and $\PAccess{\ORequest{y}}$ are computationally indistinguishable.
+	  	\item The scheme $\Sigma$ is correct if it returns on input $\ORequest{y}$ data that is consistent with $\ORequest{y}$ with probability $\geq 1 - \mathsf{negl}(\lvert\ORequest{y}\rvert)$
+  	\end{enumerate}
+\end{definition}
+\textbf{Path-ORAM.}
+Path-ORAM is an efficient tree-based ORAM construction proposed by Stefanov et. al. \cite{Stefanov:2013}. 
+In Path ORAM, the client encrypts his database into $N$ different encrypted data blocks, 
+and uses a binary tree of height $L$ to obliviously store those data blocks into a server's untrusted storage. 
+Each node of the tree is a \textit{bucket} that can store at most $Z$ blocks. 
+The client uses a \textit{position map} to keep track of the location for each real data block. 
+For any read and write accesses performed on the encrypted database, the client requires to perform a read, an eviction, and an update procedure on the tree and on the position map. 
+In particular, in order to perform an access on a block, the client uses the position map to look up the block's position in the binary tree to obtain its path, and the client retrieves the path from the server, decrypts, and stores the whole path in a local \textit{stash} of size $O(\lambda)$ blocks where the parameter $\lambda$ denotes the security level which defines the overflow probability and security level of the path ORAM. 
+The client looks up the targeted block in the stash, and perform access on it. 
+Finally, the client assigns the target block with a new random path, and push all blocks in stash back to the tree according to the position map. 
+Figure~\ref{fig:oram-access} describes in detail a Path-ORAM access. 
+
+Using same notations in~\cite{Stefanov:2013}, we denote $\mathcal P(x)$ to be the path from the leaf $x$ to the root. $\mathcal P(x,\ell)$ denote the bucket at level $\ell$ along the path $\mathcal P(x)$. $\mathsf{ReadBucket(b)}$ denotes decrypting and reading all blocks from bucket $b$. Similarly, $\mathsf{WriteBucket}(b,\mathsf{Block}')$ denotes encrypting and writing block $\mathsf{Block}'$ into bucket $b$. $\mathsf{Position}[\cdot]$ denotes the position map, and $\mathsf{Position[a]}$ outputs the path identifier that block with $a$ is stored. Finally, $S$ is the stash that is stored on client side.
+\\
+{
+\begin{figure}[!h]\label{fig:oram-access}
+	\centering
+	\begin{minipage}{\linewidth}
+	\begin{algorithm}[H]
+	  	\caption{$\mathsf{Path\text{-}ORAM.Access(op,a,data^*})$\label{alg}}
+	  	\begin{algorithmic}[1]
+			\State $x \leftarrow \mathsf{Position}[a]$
+			\item $\mathsf{Position}[a] \stackrel{\$}{\leftarrow} \{0,\dots,2^L-1\}$ 
+			\For{$i \in \{0,\dots, L\}$}
+			\State {$S \leftarrow S \cup \mathsf{ReadBucket}(\mathcal P(x,\ell))$}
+			\EndFor
+			\State $\mathsf{data}\leftarrow$ read block $a$ from $S$
+			\If{$\mathsf{op = write}$}
+			\State $S \leftarrow (S - \mathsf{\{(a,data)\}\cup \{(a,data^*)\}})$
+			\EndIf
+			\For{$\ell \in \{0,\dots, L\}$}
+			\State $S'$ $\leftarrow$ $\{$ $\mathsf{(a',data')}$$\in$$ S$$:\mathcal{P}(x,\ell)=\mathcal{P}(\mathsf{position[a'],\ell})$$\}$
+			\State $S' \leftarrow$ Select $\min(S',Z)$ blocks from $S'$
+ 			\State $S \leftarrow S - S'$
+			\State $\mathsf{WriteBucket}(\mathcal{P}(x,\ell,S'))$
+			\EndFor
+			\State \Return $\mathsf{data}$
+		\end{algorithmic}	
+	\end{algorithm}
+	\end{minipage}
+	\caption{a Path-ORAM access}
+\end{figure}
+}
+\textbf{Recursive ORAM.} 
+In the non-recursive Path-ORAM construction, the client has to store a position map of the size $O(N)$ bits. 
+This is not suitable for a resource-constrained client. Stefanov et. al~\cite{Stefanov:2013} and Shi et. al.~\cite{Elaine-rORAM} present path ORAM construction that reduces the size of the position map to $O(1)$. 
+The main idea of those constructions is to store a position map as another ORAM tree in the server side, and the client only keeps the position map of the new ORAM.
+The client keeps compressing the position map into another ORAM tree until the size of position map is small enough to be kept client's storage. 
+These constructions come with the cost of an increase in communication between client and server. 
+% However, for this work, if we consider the Intel SGX to be the client in ORAM setting, then the cost of communication is the IO access between SGX and the random access memory. 
+In this work, we consider the Intel SGX as the client in the ORAM protocol; therefore, the total size of the position map and stash is limited by the size of EPC which is around $128$MB. Thus, recursive path ORAM might be a suitable solution for a large dataset. 
+
+\subsection{Intel SGX} % (fold)
+\label{sub:intel_sgx}
+Intel SGX is a set of hardware instructions introduced with the 6th Generation Intel Core processors. 
+We use Intel SGX as a trusted execution environment for the execution of ORAM controller on the untrusted server. 
+
+In this project,  we focus on these main properties of Intel SGX:
+\noindent 
+\begin{itemize}
+	\item \textbf{Enclave:} is the trusted execution unit that is located in a dedicated portion of the physical RAM. The Intel SGX makes sure that all other software on the system cannot access the enclave memory. 
+	\item \textbf{Remote Attestation and Key Exchange:} 
+	SGX allows a remote client to perform a remote attestation to verify the correct creation of an enclave. 
+	More importantly, the remote attestation provides an authentication needed for an authenticated key exchange protocol \cite{sgx-explained}. 
+	In particular, after a remote attestation,  a client can use Diffie-Hellman Key Exchange~\cite{DH-keyexchange} to agree on a shared secret.
+
+	\item \textbf{Local Attestation: } Local attestation allows two enclaves on the same system to authenticate each other and exchange data in a secure manner.
+\end{itemize}
+\textbf{Limitations.}
+There are several weaknesses of the Intel SGX
+\begin{itemize}
+	\item \textbf{Side Channel Attacks:} While Intel SGX provides security guarantees against direct memory attacks, it suffers from various side-channel attacks \cite{Xu15ControlledChannel,asyncshock,BrasserMDKCS17,hid-sgx-sidechannel-usenix17,shadow-branch-lee-usenix17}. 
+
+	\item \textbf{Enclave Page Cache Limit:} The size of EPC is limited to around $128$MB~\cite{Arnautov-epc}. 
+\end{itemize}
+
+\begin{todo-text}
+\paragraph{Secure Oblivious Operations} % (fold)
+\label{par:secure_operations}
+	discussion on oblivious comparision, oblivious assignment here. 
+	oevict,  oreadpath in zerotrace.
+\end{todo-text}
+% paragraph secure_operations (end)
+
+\subsection{Bitcoin Unspent Transction Output Database}
+Each Bitcoin transaction contains inputs and outputs. 
+Thus, a Bitcoin client can determine its balance by summing up all values in those outputs that have not been spent.
+These outputs are called Unspent Transaction Output (UTXO).
+% Instead of scanning the whole blockchain to verify transactions, 
+Moreover, Bitcoin full nodes maintain a separate database that keeps track of all unspent transaction outputs. 
+This approach allows a full client to fast validate unconfirmed transactions before relaying it to other nodes. 
+More importantly, the UTXO set stores all information needed for client with knowledge of a secret key to create a new transaction. 
+Therefore, we realize that:
+\begin{itemize}
+	\item \textbf{Privacy}: If the server can provide the SPV client oblivious accesses to the UTXO set, the privacy of the SPV client is preserved.
+	% \item \textbf{Scalability}: If there is a way to authenticate the client before providing accesses to the UTXO set, the system will be safe from some trivial DDOS attack. 
+	% By providing limited accesses on the unspent transaction output, we  
+\end{itemize}
+% subsection intel_sgx (end)
+% subsection oblivious_ram (end)
+% section preliminaries (end)

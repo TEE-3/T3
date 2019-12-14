@@ -1,0 +1,10 @@
+/App/Enclave_u.*
+/Enclave/Enclave_t.*
+/*.o
+/app
+/*.so
+/.config_HW_DEBUG_x64
+/.cproject
+/.project
+/.settings/
+/log.make

@@ -1,0 +1,12 @@
+/* Holds FS-related OCALLS */
+
+enclave {
+  untrusted {
+    int ocall_open([in, out, size=100] char* filename, int flags, int mode);
+    size_t ocall_read(int fd, [user_check] char* buf, size_t count);
+    size_t ocall_write(int fd, [user_check] char* buf, size_t count);
+    size_t ocall_lseek(int fd, size_t offset, int whence);
+    size_t ocall_check_file_size([user_check] char* filename);
+    int ocall_close(int fd);
+  };
+};

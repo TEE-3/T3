@@ -1,0 +1,8 @@
+biggerUTXO
+.config_HW_DEBUG_x64
+.vscode/
+*_u.*
+*_t.*
+*.so
+*.o
+btc_Untrusted/Main

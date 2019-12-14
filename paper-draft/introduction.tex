@@ -1,0 +1,37 @@
+%!TEX root = main.tex
+\section{Introduction}
+\label{sec:introduction}
+Over the last few years, we have seen a great interest in public blockchain in the community. 
+Bitcoin blockchain technology offered a way to provide security and privacy for financial transactions. 
+However, with a huge adoption by the community, the size of the blockchain has become too large for small and resource-constrained devices such as personal laptops or mobile devices.
+\begin{newtext}
+As of June 2018, the size of unindexed Bitcoin blockchain is 180 GB.
+\end{newtext} 
+
+Bitcoin simplified payment verification (SPV) client has become one of the solutions for storage problem for constrained devices. 
+Nakamoto~\cite{Nakamoto_bitcoin:a} sketched the idea of SPV clients in the Bitcoin whitepaper, 
+and in the Bitcoin improvement proposal 37 (BIP37)~\cite{BIP37}, Mike Hearn combines Nakamoto's idea with Bloom filter to standardize the design of Bitcoin SPV clients. 
+This design has become de facto standard and used by other light clients such as BitcoinJ and Electrum.
+
+SPV clients only need to download and verify part of blockchain that is relevant to its addresses. 
+In particular, the SPV client loads its addresses into a Bloom filter and sends the filter to a bitcoin full client. 
+The Bitcoin full client will use that filter to identify if a block contains transactions that are relevant to the SPV client, 
+and once it finds such block, it will send a modified block that only contains relevant transactions along with Merkle proofs for those transactions. 
+\\
+\textbf{Limitation. }
+Gervais et. al.~\cite{Gervais:2014:SPV-privacy} show that it's possible for a malicious node to learn several addresses loaded in the Bloom filter with high probability.
+If the adversial node can collect 2 filters issued by a same client, then a considerable number of addresses owned by that client will be leaked.
+Moreover, full nodes that supports the use of Bloom filter are targeted for Denial-of-Service attacks as the malicious clients can cripple it by making lots requests that cause high CPU usage on the full clients \cite{spv-dos}.
+\\
+\textbf{Our Solution. }
+We propose a design for a centralized system that can handle transaction requests from Bitcoin simplified payment clients while offering strong security and anonymity guarantees agaisnt potentally malicious providers. In particular, our design use standard ORAM scheme with a hardware-based solution to protect client's requests from a potentially malicious server.
+\\
+% \begin{todo-text}
+% 	\begin{itemize}
+% 		\item request distribution
+
+% 		\item batch writing 
+
+% 		\item untrusted Bitcoin client can delay incoming blocks which the update enclave stucks in updating process.
+% 	\end{itemize}
+% \end{todo-text}

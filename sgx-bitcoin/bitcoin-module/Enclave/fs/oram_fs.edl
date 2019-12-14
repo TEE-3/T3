@@ -1,0 +1,14 @@
+/* oram_fs.edl -- EDL file for oram-related ops */
+
+enclave {
+  trusted{
+    public int oram_open([user_check] char* filename, int flags, int mode);
+    public size_t oram_read(int fd, [user_check] char* buf, size_t count);
+    public size_t oram_write(int fd, [user_check] char* buf, size_t count);
+    public size_t oram_lseek(int fd, size_t offset, int whence);
+    public int oram_close(int fd);
+
+    // XXX. fix this
+    public void populate_data(int fd);
+  };
+};
