@@ -496,7 +496,7 @@ int main(int argc, char *argv[])
 	uint32_t ReadUtxoNum = 2;  //LZ: number of read accesses (for testing)
 	
 	// request_size = ID_SIZE_IN_BYTES + data_size;
-  uint32_t request_size = PKH_SIZE_IN_BYTES + data_size;
+  	uint32_t request_size = PKH_SIZE_IN_BYTES + data_size;
 	uint32_t encrypted_request_size = computeCiphertextSize(data_size);
 
 	response_size = data_size;
@@ -504,7 +504,7 @@ int main(int argc, char *argv[])
 	encrypted_request = (unsigned char *) malloc (encrypted_request_size);				
 	encrypted_response = (unsigned char *) malloc (response_size);
 	
-  // misc
+  	// misc
 	tag_in = (unsigned char*) malloc (TAG_SIZE);
 	tag_out = (unsigned char*) malloc (TAG_SIZE);
 	data_in = (unsigned char*) malloc (data_size);
@@ -527,8 +527,8 @@ int main(int argc, char *argv[])
 							
 	start = clock();
 
-  // debugging
-  printf("encrypted_request_size: %d, data_size: %d\n", encrypted_request_size, data_size);	
+  	// debugging
+  	printf("encrypted_request_size: %d, data_size: %d\n", encrypted_request_size, data_size);	
 
 	#ifdef DEBUG_PRINT	
 		printf("(Step #1). Writing UTXOs into the ORAM Tree\n");
@@ -543,7 +543,7 @@ int main(int argc, char *argv[])
     curUtxo++;
 
 		#ifdef PRINT_REQ_DETAILS		
-      printf ("Inserting UTXO #%d\n", curUtxo);
+      	printf ("Inserting UTXO #%d\n", curUtxo);
 		#endif
 		
 		//Prepare Request:
@@ -597,7 +597,7 @@ int main(int argc, char *argv[])
 
 	fclose(utxo_fd);
 	printf("Finished inserting %d UTXOs\n", WriteUtxoNum);
-  printf("----------------------------\n");
+  	printf("----------------------------\n");
 
 	// LZ. For testing purposes, we extracted the first pkh of biggerUTXO file and perform a read operation to the ORAM
 	for(ReadUtxoNum=0; ReadUtxoNum<WriteUtxoNum; ReadUtxoNum++){
@@ -664,7 +664,7 @@ int main(int argc, char *argv[]) {
 	uint32_t ReadUtxoNum = 2;  //LZ: number of read accesses (for testing)
 	
 	// request_size = ID_SIZE_IN_BYTES + data_size;
-  uint32_t request_size = PKH_SIZE_IN_BYTES + data_size;
+  	uint32_t request_size = PKH_SIZE_IN_BYTES + data_size;
 	uint32_t encrypted_request_size = computeCiphertextSize(data_size);
 
 	response_size = data_size;

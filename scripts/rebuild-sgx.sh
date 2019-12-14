@@ -19,7 +19,7 @@ cd ..
 rm -rf linux-sgx-driver
 
 #reinstall sgx-sdk
-sudo apt-get install build-essential ocaml automake autoconf libtool wget python libssl-dev libcurl4-openssl-dev protobuf-compiler libprotobuf-dev ocamlbuild
+sudo apt-get install build-essential ocaml ocamlbuild automake autoconf libtool wget python libssl-dev
 
 git clone https://github.com/intel/linux-sgx.git
 
