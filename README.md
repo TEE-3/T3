@@ -3,17 +3,13 @@
 
 <!-- ----------------- -->
 
-  
-
 -  ```btc-module``` contains the code used to generate the numbers reported in the T3 paper.
-
-  
 
 -  ```btc-extract-utxo``` is python code to read data from **chainstate** folder and extract to raw utxo.
 
 -  ```btc-reducer``` is C++ implementation to talk to **bitcoind** to obtain bitcoin transactions and blocks.
 
--  ```scripts``` contains scripts to build sgx-sdk.
+-  ```scripts``` contains scripts to set up dependencies for t3.
 
 -  ```sgx-bitcoin``` is the non-recursive implementation of path oram
 
