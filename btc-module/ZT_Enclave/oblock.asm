@@ -26,6 +26,7 @@ section .text
 	global stash_insert
 	global oassign_newlabel
 	global ofix_recursion
+	global ofix_recursion_optimized
 	global ostore_deepest
 	global ostore_deepest_round
 	global oset_goal_source
@@ -438,6 +439,25 @@ ofix_recursion:
 
 		mov dword[rcx], r9d
 		mov dword[rdi], eax		
+
+		ret
+
+ofix_recursion_optimized:
+		
+		; Take inputs,  1 ptr to block->data->ptr, 2 flag, 3 newlabel, 4 *nextleaf		
+		; Windows : rcx,rdx,r8 ,r9
+		; Linux : rdi,rsi,rdx,rcx,r8,r9
+		; Callee-saved : RBP, RBX, and R12–R15
+
+		mov r9d, dword[rcx]
+		mov r8d, dword[rdi]		
+		; mov eax, dword[rdi]
+	  cmp rsi,1
+		cmovz r9d, r8d
+		; cmovz eax, edx
+
+	  mov dword[rcx], r9d
+		; mov dword[rdi], eax		
 
 		ret
 

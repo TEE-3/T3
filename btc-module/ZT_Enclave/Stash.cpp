@@ -73,20 +73,19 @@ unsigned char *data_in, unsigned char *data_out)
 
 	while(iter&&cntr<=STASH_SIZE)	{
 		data_ptr = (unsigned char*) getDataPtr(iter->serialized_block);
-		leaflabel_ptr = getTreeLabelPtr(iter->serialized_block);
+		// leaflabel_ptr = getTreeLabelPtr(iter->serialized_block);
 		flag_id = ( getId(iter->serialized_block) == id);
-			if(flag_id == true){
-				flag_found = true;
-				//setTreeLabel(iter->serialized_block,newleaf);
-				printf("\n");
-			}
+	  if(flag_id == true){
+    //   printf("Block Found!!\n");
+		  flag_found = true;
+	  }
 
 		//Replace leaflabel in block with newleaf
 		// oassign_newlabel(leaflabel_ptr, newleaf, flag_id);
 		// omove_buffer(leaflabel_ptr, &newleaf, ID_SIZE_IN_BYTES, flag_id);
 		flag_w = (flag_id && opType == 'w');
 		omove_buffer((unsigned char*) data_ptr, data_in, stash_data_size, flag_w);
-		flag_r = (flag_id && opType == 'r');
+		flag_r = (flag_id && (opType == 'r' || opType == 'z'));
 		omove_buffer(data_out, (unsigned char*) data_ptr, stash_data_size, flag_r);
 
 		iter = iter->next;
@@ -99,9 +98,9 @@ unsigned char *data_in, unsigned char *data_out)
 	}
 	printf("\n");
 	#endif
-	if(flag_found == false){
-	    printf("BLOCK NOT FOUND IN STASH\n");
-	}
+	// if(flag_found == false){
+	//     printf("1BLOCK NOT FOUND IN STASH\n");
+	// }
 }
  
 void Stash::PerformAccessOperation(char opType, uint32_t id, uint32_t newleaf, unsigned char *data_in, unsigned char *data_out){
@@ -111,9 +110,7 @@ void Stash::PerformAccessOperation(char opType, uint32_t id, uint32_t newleaf, u
 	unsigned char *data_ptr;
 	uint32_t *leaflabel_ptr;
 
-	#ifdef PAO_DEBUG
-		bool flag_found = false;
-	#endif
+  bool flag_found = false;
     
 	#ifdef RESULTS_DEBUG
 		printf("Before PerformAccess, datasize = %d, Fetched Data :", stash_data_size);
@@ -127,25 +124,16 @@ void Stash::PerformAccessOperation(char opType, uint32_t id, uint32_t newleaf, u
 		data_ptr = (unsigned char*) getDataPtr(iter->serialized_block);
 		leaflabel_ptr = getTreeLabelPtr(iter->serialized_block);
 		flag_id = ( getId(iter->serialized_block) == id);
-		#ifdef PAO_DEBUG
-			if(flag_id == true){
+	  if(flag_id == true){
 				flag_found = true;
-				printf("Found, has data: \n");
-				unsigned char* data_ptr = getDataPtr(iter->serialized_block);
-				for(uint32_t j=0; j < stash_data_size;j++){
-				    printf("%c", data_ptr[j]);
-				}	
-				//setTreeLabel(iter->serialized_block,newleaf);
-				printf("\n");
-			}
-		#endif
+		}
 
 		//Replace leaflabel in block with newleaf
 		oassign_newlabel(leaflabel_ptr, newleaf, flag_id);
 		//omove_buffer(leaflabel_ptr, &newleaf, ID_SIZE_IN_BYTES, flag_id);
 		flag_w = (flag_id && opType == 'w');
 		omove_buffer((unsigned char*) data_ptr, data_in, stash_data_size, flag_w);
-		flag_r = (flag_id && opType == 'r');
+		flag_r = (flag_id && (opType == 'r' || opType == 'z'));
 		#ifdef PAO_DEBUG
 			if(flag_found){
 				flag_found = false;
@@ -164,11 +152,10 @@ void Stash::PerformAccessOperation(char opType, uint32_t id, uint32_t newleaf, u
 	}
 	printf("\n");
 	#endif
-	#ifdef PAO_DEBUG
 	if(flag_found == false){
-	    printf("BLOCK NOT FOUND IN STASH\n");
+	    // printf("2BLOCK NOT FOUND IN STASH\n");
+      // assert(false);
 	}
-	#endif        
 }
     
 void Stash::ObliviousFillResultData(uint32_t id, unsigned char *result_data) {
@@ -299,6 +286,7 @@ void Stash::setup(uint32_t pstash_size, uint32_t pdata_size, uint32_t pgN)
 	gN = pgN;
 	STASH_SIZE = pstash_size;
 	stash_data_size = pdata_size;
+	current_size = 0;
 	for(uint32_t i = 0; i<STASH_SIZE; i++){
 		insert_new_block();
 	}
@@ -316,7 +304,7 @@ void Stash::insert_new_block()
     	Block block(stash_data_size, gN);
 	struct nodev2 *new_node = (struct nodev2*) malloc(sizeof(struct nodev2));			
 
-	if(current_size == STASH_SIZE){
+	if(current_size >= STASH_SIZE){
 		printf("%d, Stash Overflow here\n", current_size);
 	}
 	else{
@@ -326,6 +314,7 @@ void Stash::insert_new_block()
 		setStart(new_node);	
 		current_size+=1;
 	}
+	// printf("current_size %zu\n", current_size);
 }
 
 void Stash::remove(nodev2 *ptr, nodev2 *prev_ptr)
@@ -347,6 +336,7 @@ void Stash::remove(nodev2 *ptr, nodev2 *prev_ptr)
     free(ptr->serialized_block);
     free(ptr);
     current_size--;
+	printf("remove current_size %zu\n", current_size);
 
 }
 
@@ -356,8 +346,11 @@ void Stash::clear()
   Block block(stash_data_size, gN);
   struct nodev2 *iter = start;
   uint8_t cntr = 1;
+//   printf("before clear current_size %zu\n", current_size);
+
   while (iter&&cntr<=STASH_SIZE) {
     if (iter->discard_block == true) {
+      // printf("discarding %d\n", getId(iter->serialized_block));
       iter->serialized_block = block.serialize(stash_data_size);
       iter->discard_block = false;
       current_size--;
@@ -365,6 +358,7 @@ void Stash::clear()
     iter=iter->next;
     cntr++;
   }
+//   printf("after clear current_size %zu\n", current_size);
 }
 
 void Stash::removeBlock(int id)
@@ -388,17 +382,14 @@ void Stash::pass_insert(unsigned char *serialized_block, bool is_dummy)
     struct nodev2 *iter = start;
     bool block_written = 0;
     uint8_t cntr = 1;
-    #ifdef PATHORAM_STASH_OVERFLOW_DEBUG
-        bool inserted = false;
-    #endif
+    bool inserted = false;
     while(iter&&cntr<=STASH_SIZE)	{
         bool flag = (!is_dummy && (isBlockDummy(iter->serialized_block, gN)) && !block_written);
-        #ifdef PATHORAM_STASH_OVERFLOW_DEBUG
-            inserted = inserted || flag;
-        #endif
+        inserted = inserted || flag;
+        // if (flag) printf("adding to stash: %zu\n", getId(serialized_block));
         stash_serialized_insert(iter->serialized_block, serialized_block, stash_data_size, flag, &block_written); 
-	  	  if (flag && (optimized_reading == 1)) {
-          iter->discard_block = true;
+	  	if ((optimized_reading == 1) && flag) {
+          	iter->discard_block = true;
         }
   		  // ADIL
       /*
@@ -414,12 +405,10 @@ void Stash::pass_insert(unsigned char *serialized_block, bool is_dummy)
         iter = iter->next;
         cntr++;
     }
-    #ifdef PATHORAM_STASH_OVERFLOW_DEBUG
-        if(!is_dummy && !inserted){
-            printf("STASH OVERFLOW \n");
-        }
-    #endif
-
+    if(!is_dummy && !inserted){
+      // printf("STASH OVERFLOW \n");
+    //   assert(false);
+    }
 }		
 
 void Stash::insert( unsigned char *serialized_block)
@@ -434,6 +423,8 @@ void Stash::insert( unsigned char *serialized_block)
         new_node->serialized_block = serialized_block;
         new_node->next = getStart();
         setStart(new_node);	
-        current_size+=1;
+        current_size+=1;		
     }
+	printf("insert current_size %zu", current_size);
 }
+

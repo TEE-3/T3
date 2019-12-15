@@ -19,15 +19,13 @@ struct tx_t{
     sgx_sha256_hash_t txhash;
     unsigned char * hex;
     uint32_t hexSize; 
-    // We don't need the vectors here because we only collect
-    // inputs and outputs from P2PKH transactions
-    //std::vector<txInput_t> vin;
-    //std::vector<txOutput_t> vout;
 };
 
 void doubleSHA256(uint8_t* data, uint32_t len, sgx_sha256_hash_t *output);
 void ripemd160(uint8_t * data, uint32_t len, uint8_t hash[20]);
 size_t getRealSizeFromCompactSize(unsigned char * hex, size_t offset, size_t * realSize);
+size_t getSegWitTxInputs(tx_t * tx, size_t offset, size_t vin_size);
 size_t getTxInputs(tx_t * tx, size_t offset);
 size_t getTxOutputs(tx_t * tx, size_t offset, uint32_t blockheight);
+size_t getSegWitP2PKH(tx_t * tx, size_t offset, size_t vin_size);
 int reducer(tx_t * listTxs, size_t numTxs, uint32_t blockheight, std::vector<txInOut68_t> * srt_vin, std::vector<txInOut68_t> * srt_vout);

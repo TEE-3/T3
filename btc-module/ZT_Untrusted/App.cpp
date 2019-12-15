@@ -408,14 +408,6 @@ uint8_t downloadPath(unsigned char* path_array, uint32_t pathSize, uint32_t leaf
 	return 1;
 }
 
-uint8_t downloadObject(unsigned char* serialized_bucket, uint32_t bucket_size, uint32_t label, unsigned char* hash, uint32_t hashsize, uint32_t size_for_level, uint32_t recursion_level) {
-	clock_gettime(CLOCK_MONOTONIC, &download_start_time);
-	serialized_bucket = ls.downloadObject(serialized_bucket, label, hash, hashsize, size_for_level, recursion_level);
-	clock_gettime(CLOCK_MONOTONIC, &download_end_time);
-	double mtime = timetaken(&download_start_time, &download_end_time);
-	download_time = mtime;
-	return 1;
-}
 
 void build_fetchChildHash(uint32_t left, uint32_t right, unsigned char* lchild, unsigned char* rchild, uint32_t hash_size, uint32_t recursion_level) {
 	ls.fetchHash(left,lchild,hash_size, recursion_level);
@@ -473,7 +465,21 @@ int8_t ZT_Initialize(){
 }
 
 void ZT_Close(){
-        sgx_destroy_enclave(global_eid);
+	printf("ZT_Close called\n");
+	sgx_status_t ret = SGX_ERROR_UNEXPECTED;
+    ret = sgx_destroy_enclave(global_eid);
+	if (ret != SGX_SUCCESS) {
+        print_error_message(ret);
+    }
+}
+uint32_t ZT_initLocalStorage( uint32_t max_blocks, uint32_t data_size, uint32_t stash_size, uint32_t oblivious_flag, uint32_t recursion_data_size, uint32_t oram_type, uint8_t pZ){
+	int8_t recursion_levels;
+    
+	recursion_levels = computeRecursionLevels(max_blocks, recursion_data_size, MEM_POSMAP_LIMIT);
+	// printf("APP.cpp : ComputedRecursionLevels = %d", recursion_levels);
+    
+	uint32_t D = (uint32_t) ceil(log((double)max_blocks/4)/log((double)2));
+	ls.setParams(max_blocks,D,pZ,stash_size,data_size + ADDITIONAL_METADATA_SIZE,inmem_flag, recursion_data_size + ADDITIONAL_METADATA_SIZE, recursion_levels);
 }
 
 uint32_t ZT_New( uint32_t max_blocks, uint32_t data_size, uint32_t stash_size, uint32_t oblivious_flag, uint32_t recursion_data_size, uint32_t oram_type, uint8_t pZ){
@@ -482,12 +488,13 @@ uint32_t ZT_New( uint32_t max_blocks, uint32_t data_size, uint32_t stash_size, u
 	uint8_t urt;
 	uint32_t instance_id;
 	int8_t recursion_levels;
+	printf("reccccc\n");
     
 	recursion_levels = computeRecursionLevels(max_blocks, recursion_data_size, MEM_POSMAP_LIMIT);
 	printf("APP.cpp : ComputedRecursionLevels = %d", recursion_levels);
     
 	uint32_t D = (uint32_t) ceil(log((double)max_blocks/4)/log((double)2));
-	ls.setParams(max_blocks,D,pZ,stash_size,data_size + ADDITIONAL_METADATA_SIZE,inmem_flag, recursion_data_size + ADDITIONAL_METADATA_SIZE, recursion_levels);
+	// ls.setParams(max_blocks,D,pZ,stash_size,data_size + ADDITIONAL_METADATA_SIZE,inmem_flag, recursion_data_size + ADDITIONAL_METADATA_SIZE, recursion_levels);
     
 	#ifdef EXITLESS_MODE
 		int rc;
@@ -531,8 +538,14 @@ uint32_t ZT_New( uint32_t max_blocks, uint32_t data_size, uint32_t stash_size, u
 }
 
 
-void ZT_Access(uint32_t instance_id, uint8_t oram_type, unsigned char *encrypted_request, unsigned char *encrypted_response, unsigned char *tag_in, unsigned char* tag_out, uint32_t request_size, uint32_t response_size, uint32_t tag_size){
-    accessInterface(global_eid, instance_id, oram_type, encrypted_request, encrypted_response, tag_in, tag_out, request_size, response_size, tag_size);
+void ZT_Access(uint32_t instance_id, uint8_t oram_type, uint32_t max_blocks, unsigned char *encrypted_request, unsigned char *encrypted_response, unsigned char *tag_in, unsigned char* tag_out, uint32_t request_size, uint32_t response_size, uint32_t tag_size){
+    sgx_status_t ret = SGX_ERROR_UNEXPECTED;
+	ret = accessInterface(global_eid, instance_id, oram_type, max_blocks, encrypted_request, encrypted_response, tag_in, tag_out, request_size, response_size, tag_size);
+    if (ret != SGX_SUCCESS) {
+		printf("accessInterface failed, instance_id: %zu", instance_id);
+		abort();
+	
+	}
 }
 
 void ZT_Bulk_Read(uint32_t instance_id, uint8_t oram_type, uint32_t no_of_requests, unsigned char *encrypted_request, unsigned char *encrypted_response, unsigned char *tag_in, unsigned char* tag_out, uint32_t request_size, uint32_t response_size, uint32_t tag_size){
@@ -554,7 +567,15 @@ void test_ORAM(uint32_t instance_id, uint8_t oram_type, uint32_t block_size)
     std::cout << "FAILED" << std::endl;
   }
 }
-
+uint64_t get_recursive_tree_size(uint32_t instance_id, uint32_t oram_type){
+	uint64_t size;
+	sgx_status_t status = ZT_get_recursive_tree_size(global_eid, &size, instance_id, oram_type);
+	if (status != SGX_SUCCESS) {
+		std::cout << "get_oram_size() FAILED" << std::endl;
+		return -1;
+	}
+	return size;
+}
 /*
 	uint32_t posmap_size = 4 * max_blocks;
 	uint32_t stash_size =  (stashSize+1) * (dataSize_p+8);

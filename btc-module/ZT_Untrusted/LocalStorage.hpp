@@ -19,10 +19,37 @@
 LocalStorage.hpp
 */
 
-#pragma once
+#define HASH_LENGTH 32
+#define FILESTREAM_MODE 1
+#define DEBUG_LS 1
+// #define DEBUG_INTEGRITY 1
+// Utilization Parameter is the number of blocks of a bucket that is filled at start state. ( 4 = MAX_OCCUPANCY )
+#define UTILIZATION_PARAMETER 4
+#define ADDITIONAL_METADATA_SIZE 24
+//#define NO_CACHING 1
+//#define CACHE_UPPER 1
+//#define PASSIVE_ADVERSARY 1
+//#define PRINT_BUCKETS 1
 
 class LocalStorage
 {
+	uint32_t dataSize;
+	uint32_t Z;
+	uint32_t D;
+
+	//Take this value as input parameter !
+	bool inmem;
+	unsigned char* inmem_tree;
+	unsigned char* inmem_hash;
+	unsigned char** inmem_tree_l;
+	unsigned char** inmem_hash_l;
+	uint64_t datatree_size;
+	uint64_t hashtree_size;
+	uint32_t bucket_size;
+	uint32_t recursionBlockSize;
+	int32_t recursion_levels=0;
+	uint32_t objectkeylimit;
+
 public:
 	LocalStorage();
 	LocalStorage(LocalStorage &ls);
@@ -30,17 +57,9 @@ public:
 	void connect();
 	void fetchHash(uint32_t objectKey, unsigned char* hash_buffer, uint32_t hashsize, uint32_t recursion_level);
 	uint8_t uploadObject(unsigned char *serialized_bucket, uint32_t objectKey, unsigned char* hash, uint32_t hashsize, uint32_t size_for_level, uint32_t recursion_level);
-	unsigned char* downloadObject(unsigned char* data, uint32_t objectKey, unsigned char *hash, uint32_t hashsize,uint32_t level, uint32_t D_lev);
 	uint8_t uploadPath(unsigned char *serialized_path, uint32_t leafLabel, unsigned char *path_hash,uint32_t level, uint32_t D_level);
 	unsigned char* downloadPath(unsigned char* data, uint32_t leafLabel, unsigned char *path_hash, uint32_t path_hash_size, uint32_t level, uint32_t D);
 	void setParams(uint32_t maxBlocks, uint32_t D, uint32_t Z, uint32_t stashSize, uint32_t dataSize, bool inmem, uint32_t recursion_block_size, int8_t recursion_levels);
-	void saveState(unsigned char *posmap, uint32_t posmap_size, unsigned char *stash, uint32_t stashSize, unsigned char* merkle_root, uint32_t hash_and_key_size);
-	void savePosmapMerkleRoot(unsigned char* posmap_serialized, uint32_t posmap_size, unsigned char* merkle_root_and_aes_key, uint32_t hash_and_key_size);
-	void saveStashLevel(unsigned char *stash, uint32_t stash_size, uint32_t level);	
-	int8_t restoreState(uint32_t *posmap, uint32_t posmap_size, uint32_t *stash, uint32_t *stashSize, unsigned char* merkle_root, uint32_t hash_and_key_size);
-	void restorePosmap(uint32_t* posmap, uint32_t size);
-	void restoreMerkle(unsigned char* merkle, uint32_t size);
-
 	void deleteObject();
 	void copyObject();
 };

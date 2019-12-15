@@ -28,9 +28,21 @@ std::vector<CircuitORAM *> coram_instances;
 
 uint32_t poram_instance_id=0;
 uint32_t coram_instance_id=0;
+bool isLSinit = false;
+
+uint32_t getIdFromPkh(unsigned char * pkh, uint32_t max_blocks)
+{
+	//TODO: error checking
+	uint32_t id;
+	sgx_sha256_hash_t hash;
+    sgx_sha256_msg((uint8_t*)pkh, PKH_SIZE_IN_BYTES, &hash);
+    uint32_t num = (hash[0] << 24) | (hash[1] << 16) | (hash[2] << 8) | (hash[3]);
+	id = num % max_blocks; //2^n	
+	return id;
+}
 
 uint32_t createNewORAMInstance(uint32_t max_blocks, uint32_t data_size, uint32_t stash_size, uint32_t oblivious_flag, uint32_t recursion_data_size, int8_t recursion_levels, uint64_t onchip_posmap_mem_limit, uint32_t oram_type, uint8_t pZ){
-
+	
 	if(oram_type==0){
 		PathORAM *new_poram_instance = (PathORAM*) malloc(sizeof(PathORAM));
 		poram_instances.push_back(new_poram_instance);
@@ -41,17 +53,9 @@ uint32_t createNewORAMInstance(uint32_t max_blocks, uint32_t data_size, uint32_t
 			printf("Recursion Levels = %d\n", recursion_levels);	
 		#endif
 		
-		new_poram_instance->Initialize(pZ, max_blocks, data_size, stash_size, oblivious_flag, recursion_data_size,
+		new_poram_instance->Initialize(isLSinit, pZ, max_blocks, data_size, stash_size, oblivious_flag, recursion_data_size,
               recursion_levels, onchip_posmap_mem_limit);
-		
-		// [Lizzy]
-		// Initialize ORAM bloks with zeros
-		// unsigned char data_in[data_size], data_out[data_size]; 
-		// memset(&data_in, 0, data_size);
-		// for(int i=0; i<max_blocks; i++){
-		// 	new_poram_instance->Access_temp(i, 'w', &data_in[0], &data_out[0]);
-		// }
-		
+		if(!isLSinit) isLSinit = true;
 		return poram_instance_id++;
 	}
 	else if(oram_type==1){
@@ -64,23 +68,15 @@ uint32_t createNewORAMInstance(uint32_t max_blocks, uint32_t data_size, uint32_t
 			printf("Recursion Levels = %d\n", recursion_levels);	
 		#endif
 
-		new_coram_instance->Initialize(pZ, max_blocks, data_size, stash_size, oblivious_flag, recursion_data_size,
+		new_coram_instance->Initialize(isLSinit, pZ, max_blocks, data_size, stash_size, oblivious_flag, recursion_data_size,
               recursion_levels, onchip_posmap_mem_limit);
-
-		// [Lizzy]
-		// Initialize ORAM bloks with zeros
-		// unsigned char data_in[data_size], data_out[data_size]; 
-		// memset(&data_in, 0, data_size);
-		// for(int i=0; i<max_blocks; i++){
-		// 	new_coram_instance->Access_temp(i, 'w', &data_in[0], &data_out[0]);
-		// }
-
+		if(!isLSinit) isLSinit = true;
 		return coram_instance_id++;
 	}
 }
 
 
-void accessInterface(uint32_t instance_id, uint8_t oram_type, unsigned char *encrypted_request, unsigned char *encrypted_response, unsigned char *tag_in, unsigned char* tag_out, uint32_t encrypted_request_size, uint32_t response_size, uint32_t tag_size){
+void accessInterface(uint32_t instance_id, uint8_t oram_type, uint32_t max_blocks, unsigned char *encrypted_request, unsigned char *encrypted_response, unsigned char *tag_in, unsigned char* tag_out, uint32_t encrypted_request_size, uint32_t response_size, uint32_t tag_size){
 
 	//TODO : Would be nice to remove this dynamic allocation.
 	PathORAM *poram_current_instance;
@@ -112,16 +108,7 @@ void accessInterface(uint32_t instance_id, uint8_t oram_type, unsigned char *enc
 	request_ptr = request+1;
 	memcpy(&pkh, request_ptr, PKH_SIZE_IN_BYTES); 
 	
-	//TODO: error checking
-	sgx_sha256_hash_t hash;
-    sgx_sha256_msg((uint8_t*)&pkh, PKH_SIZE_IN_BYTES, &hash);
-    uint32_t num = (hash[0] << 24) | (hash[1] << 16) | (hash[2] << 8) | (hash[3]);
-	for( int k = 0; k < 20; k++ ){
-		if( k % 16 == 0 ) printf("\n");
-		printf("%2x ", (unsigned)pkh[k]);
-	}
-	id = num % 2097152; //2^n
-	printf("\nid: %u\n", id);
+	id = getIdFromPkh(&pkh[0], max_blocks);
 
 	//printf("Request Type = %c, Request_id = %d", opType, id);
 	data_in = request_ptr+PKH_SIZE_IN_BYTES;
@@ -331,17 +318,6 @@ int verifyBlock(unsigned char * blockheader, tx_t * listTxs, size_t numTxs){
 	return 0;
 }
 
-uint32_t getIdFromPkh(unsigned char * pkh, uint32_t max_blocks)
-{
-	//TODO: error checking
-	uint32_t id;
-	sgx_sha256_hash_t hash;
-    sgx_sha256_msg((uint8_t*)pkh, PKH_SIZE_IN_BYTES, &hash);
-    uint32_t num = (hash[0] << 24) | (hash[1] << 16) | (hash[2] << 8) | (hash[3]);
-	id = num % max_blocks; //2^n	
-	return id;
-}
-
 void accessORAM(uint32_t instance_id, uint8_t oram_type, uint32_t block_id, char opType, unsigned char * data_in, unsigned char * data_out){
 
 	//TODO : Would be nice to remove this dynamic allocation.
@@ -366,58 +342,71 @@ int vectorToORAM(uint32_t instance_id, uint8_t oram_type, uint8_t vector_type, u
 	printf("vectorToORAM size  \t %d\n", vector_size);
 	
 	unsigned char data_out[ORAM_block_size], trash[ORAM_block_size];
+  unsigned char expected[ORAM_block_size];
 	uint32_t UTXOsPerORAMblock = ORAM_block_size/68;
 
 	for (size_t item = 0; item<vector_size; item++) {
-		printf("Index of vector: %d\n", item);
+
 		// 0. Get block id from pkh
 		uint32_t block_id = getIdFromPkh(&(*vector)[item].u68bytes[44], max_blocks);
-		
+
+    // ADIL.
+    printf("Block ID: %d\n", block_id);
+
 		// 1. Get the Oram block in data_out
-		accessORAM(instance_id, oram_type, block_id, 'r', &trash[0], &data_out[0]);
-		printf("data_out:\n");	
-		hexdump(&data_out[0], ORAM_block_size);
+#ifdef OPTIMIZED	
+		accessORAM(instance_id, oram_type, block_id, 'z', &trash[0], &data_out[0]);
+#else
+    accessORAM(instance_id, oram_type, block_id, 'r', &trash[0], &data_out[0]);
+#endif
 
 		if(vector_type == 0){ // vin
+		
 		// 2. Search for the UTXO that has the input's txhash and position. If found, replace utxo with zeros
 			uint32_t index_utxo;
 			for(uint32_t utxo=0; utxo<UTXOsPerORAMblock; utxo++){
 				index_utxo = utxo*68;
 				if(memcmp(&(*vector)[item].u68bytes[0], &data_out[index_utxo], 32)==0 && memcmp(&(*vector)[item].u68bytes[64], &data_out[index_utxo+64], 4)==0){
-					printf("UTXO to delete:\n");
-					hexdump(&data_out[index_utxo], 68);
 					memset(&data_out[index_utxo], 0, 68);
 					break;
 				}
 			}
-		}else{ // vout
-		// 2. Write the new UTXO into an empty slot of the ORAM block
-			uint32_t index_utxo, id;
+			
+		} else { // vout
+		  // 2. Write the new UTXO into an empty slot of the ORAM block
+			uint32_t index_utxo, id, utxo_counter=0;
 			for(uint32_t utxo=0; utxo<UTXOsPerORAMblock; utxo++){
 				index_utxo = utxo*68;
 				id = getIdFromPkh(&data_out[index_utxo+44], max_blocks);
-				if(id != block_id){
-					printf("UTXO to add:\n");
-					hexdump(&(*vector)[item].u68bytes[0], 68);
-					memcpy(&data_out[index_utxo], &(*vector)[item].u68bytes[0], 68);
-					break;
+				hexdump(&data_out[index_utxo+44], 20);				
+				if(id != block_id){					
+					if(utxo_counter<2){
+						memcpy(&data_out[index_utxo], &(*vector)[item].u68bytes[0], 68);
+						break;
+					}
+				}else{
+					if(memcmp(&data_out[index_utxo+44], &(*vector)[item].u68bytes[44], 20)==0) utxo_counter++;
 				}
 			}
 		}
-		// hexdump(&data_out[0], ORAM_block_size);
 
-		// 3. Write the modified block back to the ORAM tree
+    // 3. Write the modified block back to the ORAM tree
 		accessORAM(instance_id, oram_type, block_id, 'w', &data_out[0], &trash[0]);
-				
-		// TEST: Read modified block from ORAM tree
-		accessORAM(instance_id, oram_type, block_id, 'r', &trash[0], &data_out[0]);
-	
-		printf("ORAM out:\n");
-		for(uint32_t utxo=0; utxo<UTXOsPerORAMblock; utxo++){
-			hexdump(&data_out[68*utxo], 68);
-		}				
-		printf("\n");
+
+		// unsigned char zout[ORAM_block_size], rout[ORAM_block_size];
+		// accessORAM(instance_id, oram_type, block_id, 'z', &data_out[0], &zout[0]);
+
+		// accessORAM(instance_id, oram_type, block_id, 'r', &data_out[0], &rout[0]);
+
+		// check_data((unsigned char*) &zout, (unsigned char*) &rout, ORAM_block_size);
+
+
 	}
+
+//   if (vector_type == 1) 
+//   {
+
+//   }
 }
 
 //Clean up all instances of ORAM on terminate.
@@ -445,17 +434,21 @@ int sendRawTxList(uint32_t instance_id, uint8_t oram_type, uint32_t max_blocks, 
 	// Verify
 	verifyBlock(blockheader, &listTxs[0], numTxs);
 
-    // Extract UTXOs	
-    reducer(listTxs, numTxs, blockheight, &vin, &vout);
+  // Extract UTXOs	
+  reducer(listTxs, numTxs, blockheight, &vin, &vout);
 
 	size_t vin_size = vin.size();
 	size_t vout_size = vout.size();
-	printf("sendRawTxList pruned vin  \t %d\n", vin_size);
-	printf("sendRawTxList pruned vout  \t %d\n", vout_size);
+	printf("sendRawTxList \n"
+			"pruned vin  \t %d\n" 
+			"pruned vout  \t %d\n", vin_size, vout_size);
 
+  // 1 is for adding UTXOs into the tree
 	vectorToORAM(instance_id, oram_type, 1, max_blocks, ORAM_block_size, &vout);
-	vectorToORAM(instance_id, oram_type, 0, max_blocks, ORAM_block_size, &vout);
-	// vectorToORAM(instance_id, oram_type, 0, max_blocks, ORAM_block_size, &vin);
+
+  // 0 is for deleting UTXOs from the tree
+	vectorToORAM(instance_id, oram_type, 0, max_blocks, ORAM_block_size, &vin);
+	// vectorToORAM(instance_id, oram_type, 0, max_blocks, ORAM_block_size, &vout);
 	
 	vin.clear();
     vout.clear();
@@ -468,4 +461,34 @@ int sendRawTxList(uint32_t instance_id, uint8_t oram_type, uint32_t max_blocks, 
 
     
     return 0;
+}
+
+uint64_t ZT_get_recursive_tree_size(uint32_t instance_id, uint32_t oram_type){
+	PathORAM *poram_current_instance;
+	CircuitORAM *coram_current_instance;
+	uint64_t total_oram_size = 0;
+	
+	if(oram_type==0){
+		poram_current_instance = poram_instances[instance_id];
+		total_oram_size += sizeof(PathORAM);
+		total_oram_size += poram_current_instance->encrypted_path_size;
+		total_oram_size += poram_current_instance->decrypted_path_size;
+		total_oram_size += poram_current_instance->fetched_path_array_size;
+		total_oram_size += poram_current_instance->path_hash_size;
+		total_oram_size += poram_current_instance->new_path_hash_size;
+		total_oram_size += poram_current_instance->serialized_result_block_size;
+		total_oram_size += poram_current_instance->posmap_size;
+		total_oram_size += poram_current_instance->max_blocks_level_size;
+		total_oram_size += poram_current_instance->real_max_blocks_level_size;
+		total_oram_size += poram_current_instance->N_level_size;
+		total_oram_size += poram_current_instance->D_level_size;
+		total_oram_size += poram_current_instance->merkle_root_hash_level_size;
+		total_oram_size += KEY_LENGTH;
+		total_oram_size += poram_current_instance->recursive_stash_size*(poram_current_instance->data_size + ADDITIONAL_METADATA_SIZE);
+
+
+	}else if(oram_type==1){
+
+	}
+	return total_oram_size;
 }

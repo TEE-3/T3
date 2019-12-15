@@ -17,6 +17,7 @@
 
 #include "Main.hpp"
 #define MILLION 1E6
+#define PAD 12
 
 uint32_t no_of_elements;
 uint32_t no_of_accesses;
@@ -27,6 +28,8 @@ bool inmem_flag;
 uint32_t data_size;
 uint32_t max_blocks;
 int requestlength;
+uint32_t btc_block;
+bool write = false;
 uint32_t stash_size;
 uint32_t oblivious = 0;
 uint32_t recursion_data_size = 0;
@@ -38,6 +41,8 @@ uint32_t request_size, response_size;
 unsigned char *data_in;
 unsigned char *data_out;
 uint32_t bulk_batch_size=0;
+uint32_t threads=0;
+
 
 clock_t generate_request_start, generate_request_stop, extract_response_start, extract_response_stop, process_request_start, process_request_stop, generate_request_time, extract_response_time,  process_request_time;
 uint8_t Z;
@@ -50,7 +55,9 @@ FILE *iquery_file;
 
 std::string username = "haas256";
 std::string password = "12345678";
-std::string address  = "10.186.98.166"; 
+std::string address  = "10.186.99.68";
+// std::string address  = "127.0.0.1";
+// std::string address  = "10.186.98.166"; 
 // std::string address  = "25.51.2.246"; 
 int port = 8332;
 BitcoinAPI btc(username, password, address, port);
@@ -61,6 +68,17 @@ double time_taken(timespec *start, timespec *end){
 	nseconds = end->tv_nsec - start->tv_nsec;
 	double mstime = ( double(seconds * 1000) + double(nseconds/MILLION) );
 	return mstime;
+}
+
+void check_data(unsigned char* a, unsigned char* b, size_t len)
+{
+  size_t i;
+  for (i = 0; i < len; i++) {
+    if (a[i] != b[i]) {
+      printf("[ERR] Mismatch at %zu\n", i);
+      assert(false);
+    }
+  }
 }
 
 int AES_GCM_128_encrypt (unsigned char *plaintext, int plaintext_len, unsigned char *aad,
@@ -255,7 +273,7 @@ uint32_t computeCiphertextSize(uint32_t data_size){
 	if((PKH_SIZE_IN_BYTES+data_size)%AES_GCM_BLOCK_SIZE_IN_BYTES!=0)
 		encrypted_request_size+=1;
 	encrypted_request_size*=16;
-	printf("Request_size = %d\n", encrypted_request_size);
+	// printf("Request_size = %d\n", encrypted_request_size);
 	return encrypted_request_size;
 }
 
@@ -326,9 +344,17 @@ void getParams(int argc, char* argv[])
 		Z = std::stoi(str);
 	str=argv[11];
 		bulk_batch_size = std::stoi(str);
-
-	std::string qfile_name = "ZT_"+std::to_string(max_blocks)+"_"+std::to_string(data_size);
-	iquery_file = fopen(qfile_name.c_str(),"w");
+	str = argv[12];
+	btc_block = std::stoi(str);
+	str = argv[13];
+	if(str=="1")
+		write = true;
+	str = argv[14];
+	threads = std::stoi(str);	
+	
+	str = oram_type ? "circuit_" : "path_";
+	std::string qfile_name = "test2019/SGX_"+str+std::to_string(max_blocks)+"_"+std::to_string(data_size)+"_"+std::to_string(threads);
+	iquery_file = fopen(qfile_name.c_str(),"a+");
 }
 
 
@@ -496,7 +522,7 @@ int main(int argc, char *argv[])
 	uint32_t ReadUtxoNum = 2;  //LZ: number of read accesses (for testing)
 	
 	// request_size = ID_SIZE_IN_BYTES + data_size;
-  	uint32_t request_size = PKH_SIZE_IN_BYTES + data_size;
+  uint32_t request_size = PKH_SIZE_IN_BYTES + data_size;
 	uint32_t encrypted_request_size = computeCiphertextSize(data_size);
 
 	response_size = data_size;
@@ -504,7 +530,7 @@ int main(int argc, char *argv[])
 	encrypted_request = (unsigned char *) malloc (encrypted_request_size);				
 	encrypted_response = (unsigned char *) malloc (response_size);
 	
-  	// misc
+  // misc
 	tag_in = (unsigned char*) malloc (TAG_SIZE);
 	tag_out = (unsigned char*) malloc (TAG_SIZE);
 	data_in = (unsigned char*) malloc (data_size);
@@ -527,8 +553,8 @@ int main(int argc, char *argv[])
 							
 	start = clock();
 
-  	// debugging
-  	printf("encrypted_request_size: %d, data_size: %d\n", encrypted_request_size, data_size);	
+  // debugging
+  printf("encrypted_request_size: %d, data_size: %d\n", encrypted_request_size, data_size);	
 
 	#ifdef DEBUG_PRINT	
 		printf("(Step #1). Writing UTXOs into the ORAM Tree\n");
@@ -543,7 +569,7 @@ int main(int argc, char *argv[])
     curUtxo++;
 
 		#ifdef PRINT_REQ_DETAILS		
-      	printf ("Inserting UTXO #%d\n", curUtxo);
+      printf ("Inserting UTXO #%d\n", curUtxo);
 		#endif
 		
 		//Prepare Request:
@@ -597,7 +623,7 @@ int main(int argc, char *argv[])
 
 	fclose(utxo_fd);
 	printf("Finished inserting %d UTXOs\n", WriteUtxoNum);
-  	printf("----------------------------\n");
+  printf("----------------------------\n");
 
 	// LZ. For testing purposes, we extracted the first pkh of biggerUTXO file and perform a read operation to the ORAM
 	for(ReadUtxoNum=0; ReadUtxoNum<WriteUtxoNum; ReadUtxoNum++){
@@ -637,82 +663,196 @@ int main(int argc, char *argv[])
 	free(encrypted_request);
 	free(encrypted_response);
 	free(tag_in);
-	free(tag_out);
+free(tag_out);
 	free(data_in);
 	free(data_out);
-
 	return 0;
 }
 */
+uint8_t * threads_result;
+
+void make_ZT_request(uint32_t instance_id, char op_type, unsigned char *pkh, unsigned char *data_input, unsigned char *data_output){
+
+	// Prepare request:
+	uint32_t encrypted_request_size = computeCiphertextSize(data_size);
+	unsigned char *encrypted_request_th, *tag_in_th, *encrypted_response_th, *tag_out_th;
+
+	encrypted_request_th = (unsigned char *) malloc(encrypted_request_size);
+	tag_in_th = (unsigned char *) malloc(TAG_SIZE);
+	encrypted_response_th = (unsigned char *) malloc(data_size);
+	tag_out_th = (unsigned char *) malloc(TAG_SIZE);
+
+	encryptRequest(pkh, op_type, data_input, data_size, encrypted_request_th, tag_in_th, encrypted_request_size);
+
+	// Process Request:		
+	ZT_Access(instance_id, oram_type, max_blocks, encrypted_request_th, encrypted_response_th, tag_in_th, tag_out_th,
+		encrypted_request_size, data_size, TAG_SIZE);
+	
+	// Extract Response:
+	extractResponse(encrypted_response_th, tag_out_th, data_size, data_output);
+	
+	//Free pointers
+	free(encrypted_request_th);
+	free(tag_in_th);
+	free(encrypted_response_th);
+	free(tag_out_th);
+
+}
+
+void read_from_oram_instance(uint32_t instance_id, unsigned char * pkh, uint32_t thread_id)
+{
+	// struct timespec start, end;
+	unsigned char d_in[data_size];
+	
+	// Read from all instances
+
+    // clock_gettime(CLOCK_MONOTONIC, &start);
+	for(uint32_t i=0; i<100; i++){
+		make_ZT_request(instance_id, 'r', pkh, &d_in[0], &threads_result[(data_size+PAD)*thread_id]);
+		// hexdump(&threads_result[(data_size+PAD)*thread_id], data_size);	
+	}
+    // clock_gettime(CLOCK_MONOTONIC, &end);
+	// printf("[+] running time of 100 read-only: %f ms\n", time_taken(&start, &end));
+}
+
+void launch_threads(uint32_t num_threads)
+{
+	struct timespec start, end;
+    std::thread readers[num_threads];
+	threads_result = (uint8_t *) malloc(num_threads*(data_size+PAD));
+	unsigned char pkh[20];
+	// uint32_t zt_id = ZT_New(max_blocks, data_size, stash_size, oblivious, recursion_data_size, oram_type, Z);
+	unsigned char first_in[data_size], first_out[data_size];
+	uint32_t instances[num_threads];
+	// ZT_initLocalStorage(max_blocks, data_size, stash_size, oblivious, recursion_data_size, oram_type, Z);
+	// Create ORAM instances
+	for(uint32_t i=0; i<num_threads; i++){
+		instances[i] = ZT_New(max_blocks, data_size, stash_size, oblivious, recursion_data_size, oram_type, Z);		
+	}
+	// Write to one instance
+	memset(&first_in[0], 255, data_size);
+	clock_gettime(CLOCK_MONOTONIC, &start);
+	/*write once*/
+	make_ZT_request(0, 'w', &pkh[0], first_in, first_out);
+	clock_gettime(CLOCK_MONOTONIC, &end);
+	clock_gettime(CLOCK_MONOTONIC, &start);
+	unsigned char test_in[data_size], test_out[data_size];
+
+	for(uint32_t i=0; i<200; i++){
+		make_ZT_request(0, 'z', &pkh[0], test_in, test_out);
+		// hexdump(&threads_result[(data_size+PAD)*thread_id], data_size);	
+  		clock_gettime(CLOCK_MONOTONIC, &end);
+		fprintf(iquery_file,"%f\n", time_taken(&start, &end));
+		printf("%d: %f, \n", i, time_taken(&start, &end));
+
+	}
+	fprintf(iquery_file,"writing: \n");
+	printf("[+] running time of 1000 read: %f ms\n", time_taken(&start, &end));
+	clock_gettime(CLOCK_MONOTONIC, &start);
+	for (int i = 0; i < 200; ++i)
+	{
+		/* code */
+		make_ZT_request(0, 'w', &pkh[0], first_in, first_out);
+  		clock_gettime(CLOCK_MONOTONIC, &end);
+		fprintf(iquery_file,"%f\n", time_taken(&start, &end));
+		printf("%d: %f, \n", i, time_taken(&start, &end));
+	}
+	printf("[+] Running time of 1000 write: %f ms\n", time_taken(&start, &end));
+	// for(uint32_t i=0; i<num_threads; i++){
+	// 	// Launch thread
+	// 	unsigned char trash[data_size];
+ 	//        readers[i] = std::thread(read_from_oram_instance, instances[i], &pkh[0], i);
+ 	//    }
+    // for(uint32_t i=0; i<num_threads; i++){
+    //     readers[i].join();
+    // }
+	// for(uint32_t i=0; i<num_threads; i++){
+	// 	printf("Thread num %d\n", i);
+	// 	// hexdump(&threads_result[(data_size+PAD)*i], data_size);
+	// 	// check_data(&first_in[0], &threads_result[(data_size+PAD)*i], data_size);
+	// 	// printf("[+] Check successfully passed\n");
+	// }
+	// free(threads_result);
+	fclose(iquery_file);
+}
+
+void keep_writing(){
+	struct timespec start, end;
+
+	clock_gettime(CLOCK_MONOTONIC, &start);
+	for(uint32_t i=0; i<requestlength; i++){
+		unsigned char pkh[20];
+		unsigned char d_in[data_size], d_out[data_size];
+		make_ZT_request(0,'w', &pkh[0], &d_in[0], &d_out[0]);
+	}
+	clock_gettime(CLOCK_MONOTONIC, &end);
+	printf("%f ms\n", time_taken(&start, &end));
+}
 
 int main(int argc, char *argv[]) {
 
 	getParams(argc, argv);
-
 	ZT_Initialize();
-	uint32_t zt_id = ZT_New(max_blocks, data_size, stash_size, oblivious, recursion_data_size, oram_type, Z);
-
-#ifdef ORAM_TESTING
-  // ADIL.
-  printf("Testing the ORAM implementation\n");
-  test_ORAM(0, oram_type, data_size);
-#else
-
-	// Variable declarations
-	clock_t start,end,tclock;	
-	uint32_t WriteUtxoNum = 2; //LZ: number of write accesses
-	uint32_t ReadUtxoNum = 2;  //LZ: number of read accesses (for testing)
+	ZT_initLocalStorage(max_blocks, data_size, stash_size, oblivious, recursion_data_size, oram_type, Z);
+	// uint32_t zt_id = ZT_New(max_blocks, data_size, stash_size, oblivious, recursion_data_size, oram_type, Z);
 	
-	// request_size = ID_SIZE_IN_BYTES + data_size;
-  	uint32_t request_size = PKH_SIZE_IN_BYTES + data_size;
-	uint32_t encrypted_request_size = computeCiphertextSize(data_size);
 
-	response_size = data_size;
-	data_out = (unsigned char*) malloc (data_size);
+	printf("[+] Start testing: \n");
+	launch_threads(threads);
 
-	start = clock();
+// #elif ORAM_TESTING
+//   // ADIL.
+  // printf("Testing the ORAM implementation\n");
+  // uint32_t zt_id = ZT_New(max_blocks, data_size, stash_size, oblivious, recursion_data_size, oram_type, Z);
+  // test_ORAM(zt_id, oram_type, data_size);
+	// #else
+	// 	uint32_t zt_id = ZT_New(max_blocks, data_size, stash_size, oblivious, recursion_data_size, oram_type, Z);
+	// 	// Variable declarations
+	// 	clock_t start,end,tclock;	
 
-	#ifdef DEBUG_PRINT	
-		printf("(Step #1). Writing UTXOs into the ORAM Tree\n");
-	#endif
+	// 	data_out = (unsigned char*) malloc (data_size);
+	// 	start = clock();
 
-	//TODO: Patch this along with instances patch		
-	uint32_t instance_id = 0;	
-  	int curUtxo = 0;
+	// 	#ifdef DEBUG_PRINT	
+	// 		printf("(Step #1). Writing UTXOs into the ORAM Tree\n");
+	// 	#endif
 
-	for(int block = 0; block <= 0; block++)
-    {		
-		blockinfo_t currentBlock = getBitcoinBlock(requestlength);
-		// blockinfo_t currentBlock = getLatestBitcoinBlock();
+	// 	for(int block = 0; block <= 0; block++)
+	//     {		
+	// 		blockinfo_t currentBlock = getBitcoinBlock(btc_block);
+	// 		// blockinfo_t currentBlock = getLatestBitcoinBlock();
 
-		unsigned char b[4];
-		memcpy(&b[0], &currentBlock.height, 4);        
+	// 		unsigned char b[4];
+	// 		memcpy(&b[0], &currentBlock.height, 4);        
 
-		printf("Block #%d\n", currentBlock.height);
+	// 		printf("Block #%d\n", currentBlock.height);
 
-		hexdump(&b[0], 4);
+	// 		// hexdump(&b[0], 4);
 
-		// get number of transactions
-		size_t numOfTxs = currentBlock.tx.size();
+	// 		// get number of transactions
+	// 		size_t numOfTxs = currentBlock.tx.size();
 
-		size_t  listLen = currentBlock.size + 4*numOfTxs;
-		unsigned char * txsListChar = (uint8_t*) malloc(listLen);
-		getTxList(currentBlock, numOfTxs, txsListChar);
+	// 		size_t  listLen = currentBlock.size + 4*numOfTxs;
+	// 		unsigned char * txsListChar = (uint8_t*) malloc(listLen);
+	// 		getTxList(currentBlock, numOfTxs, txsListChar);
 
-		uint8_t blockheader[80];
-		getBitcoinBlockHeader(currentBlock, &blockheader[0]);
+	// 		uint8_t blockheader[80];
+	// 		getBitcoinBlockHeader(currentBlock, &blockheader[0]);
 
 
-		Red_SendRawTxList(instance_id, oram_type, max_blocks, txsListChar, listLen, numOfTxs, blockheader, (uint32_t) currentBlock.height, data_size);
-        
-        free(txsListChar);
+	// 		Red_SendRawTxList(zt_id, oram_type, max_blocks, txsListChar, listLen, numOfTxs, blockheader, (uint32_t) currentBlock.height, data_size);
+	        
+	//         free(txsListChar);
 
-        printf("\n----------------------------------------------------------------\n");
-	}
+	//         printf("\n----------------------------------------------------------------\n");
+	// 	}
 
-#endif
+	// 	// launch_threads(8);
 
+	// #endif
+	ZT_Close();
 	return 0;	
 
 }
+
 

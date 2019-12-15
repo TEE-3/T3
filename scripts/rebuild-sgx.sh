@@ -6,7 +6,7 @@ sudo rm -rf linux-sgx
 git clone https://github.com/intel/linux-sgx-driver.git
 
 cd linux-sgx-driver
-git checkout sgx2
+#git checkout sgx2
 dpkg-query -s linux-headers-$(uname -r)
 sudo apt-get install linux-headers-$(uname -r)
 make
@@ -19,11 +19,15 @@ cd ..
 rm -rf linux-sgx-driver
 
 #reinstall sgx-sdk
-sudo apt-get install build-essential ocaml ocamlbuild automake autoconf libtool wget python libssl-dev
+sudo apt-get install build-essential ocaml ocamlbuild automake autoconf libtool wget python libssl-dev libjsonrpccpp-dev libjsonrpccpp-tools nasm
 
 git clone https://github.com/intel/linux-sgx.git
 
+# checkout to 2.1 version
+
 cd linux-sgx
+git checkout sgx_2.1.3 
+
 ./download_prebuilt.sh
 make
 make sdk_install_pkg
@@ -34,4 +38,4 @@ sudo ./sgx_linux_x64_sdk_*
 sudo ./sgx_linux_x64_psw_*
 cd ../../../..
 
-# rm -rf linux-sgx
+rm -rf linux-sgx

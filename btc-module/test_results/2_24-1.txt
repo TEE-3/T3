@@ -1,0 +1,103 @@
+btc_Untrusted/Main 16777216 10000 100 544 new memory 1 64 path 4 0 400000 0 1
+IN App: max_blocks = 16777216
+Recursion Levels : 5
+
+IN LS : recursion_levels = 5, dataSize = 568, recursionBlockSize = 88
+
+DataTree_size = 19058915104 or 17.749998 GB, HashTree_size = 268435424 or 0.250000 GB
+X = 16
+LS:Level : 0, Blocks : 256
+LS:Level : 2, Blocks : 4096
+LS:Level : 3, Blocks : 65536
+LS:Level : 4, Blocks : 1048576
+LS:Level : 5, Blocks : 16777216
+Malloc?
+IN App: max_blocks = 16777216
+Recursion Levels : 5
+APP.cpp : ComputedRecursionLevels = 5Creating Path ORAM Instance
+Block Size: 544
+Recursion Levels = 5
+In PathORAM::Initialize, Started Initialize
+
+
+ORAMTREE SAMPLEKEY WAS CALLED
+
+precursion_levels = 5real_max_blocks_level[0] = 256 
+real_max_blocks_level[1] = 256 
+real_max_blocks_level[2] = 4096 
+real_max_blocks_level[3] = 65536 
+real_max_blocks_level[4] = 1048576 
+real_max_blocks_level[5] = 16777216 
+
+ENCLAVE:Level : 0, Blocks : 256
+ENCLAVE:Level : 1, Blocks : 256
+ENCLAVE:Level : 2, Blocks : 4096
+ENCLAVE:Level : 3, Blocks : 65536
+ENCLAVE:Level : 4, Blocks : 1048576
+ENCLAVE:Level : 5, Blocks : 16777216
+
+***recursive_stash pointer: 0x7f950ad543e0
+RECURSION_LEVELS = 5
+recursion_level i=1, gN = 16777216
+recursion_level i=2, gN = 16777216
+recursion_level i=3, gN = 16777216
+recursion_level i=4, gN = 16777216
+recursion_level i=5, gN = 16777216
+In ORAMTree::Initialize(), Before BuildTreeRecursive
+(16777216,0),(16777216,0),(16777216,0),(16777216,0),
+(16777216,0),(16777216,0),(16777216,0),(16777216,0),
+(16777216,0),(16777216,0),(16777216,0),(16777216,0),
+(16777216,0),(16777216,0),(16777216,0),(16777216,0),
+(16777216,0),(16777216,0),(16777216,0),(16777216,0),
+In ORAMTree::Initialize(), After BuildTreeRecursive
+Z=4, data_size=544, d_largest=22, Largest_path_size = 52256
+Didn't create the read-only stash!
+Finished Initialize
+INSTANCE_ID returned = 0
+initialize_oram Successful
+IN App: max_blocks = 16777216
+Recursion Levels : 5
+APP.cpp : ComputedRecursionLevels = 5Creating Path ORAM Instance
+Block Size: 544
+Recursion Levels = 5
+In PathORAM::Initialize, Started Initialize
+
+
+ORAMTREE SAMPLEKEY WAS CALLED
+
+precursion_levels = 5real_max_blocks_level[0] = 256 
+real_max_blocks_level[1] = 256 
+real_max_blocks_level[2] = 4096 
+real_max_blocks_level[3] = 65536 
+real_max_blocks_level[4] = 1048576 
+real_max_blocks_level[5] = 16777216 
+
+ENCLAVE:Level : 0, Blocks : 256
+ENCLAVE:Level : 1, Blocks : 256
+ENCLAVE:Level : 2, Blocks : 4096
+ENCLAVE:Level : 3, Blocks : 65536
+ENCLAVE:Level : 4, Blocks : 1048576
+ENCLAVE:Level : 5, Blocks : 16777216
+
+***recursive_stash pointer: 0x7f950f1b33d0
+RECURSION_LEVELS = 5
+recursion_level i=1, gN = 16777216
+recursion_level i=2, gN = 16777216
+recursion_level i=3, gN = 16777216
+recursion_level i=4, gN = 16777216
+recursion_level i=5, gN = 16777216
+In ORAMTree::Initialize(), Before BuildTreeRecursive
+(16777216,0),(16777216,0),(16777216,0),(16777216,0),
+(16777216,0),(16777216,0),(16777216,0),(16777216,0),
+(16777216,0),(16777216,0),(16777216,0),(16777216,0),
+(16777216,0),(16777216,0),(16777216,0),(16777216,0),
+(16777216,0),(16777216,0),(16777216,0),(16777216,0),
+In ORAMTree::Initialize(), After BuildTreeRecursive
+Z=4, data_size=544, d_largest=22, Largest_path_size = 52256
+Didn't create the read-only stash!
+Finished Initialize
+INSTANCE_ID returned = 1
+initialize_oram Successful
+24326.691815 ms
+Thread num 0
+b852db0e957f0000b852db0e957f00000000000000000000000000000000000048f8d30a957f000002000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000b500000000000000

@@ -38,13 +38,22 @@
 			//Oram_type might not be a param anymore in the OOP version
 			uint32_t oram_type;
 
+			// LocalStorage initialization
+			bool isLSinit = false;
+
 			//Buffers
 			unsigned char* encrypted_path;
+			uint32_t encrypted_path_size;
 			unsigned char* decrypted_path;
+			uint32_t decrypted_path_size;
 			unsigned char* fetched_path_array;
+			uint32_t fetched_path_array_size;
 			unsigned char* path_hash;
+			uint32_t path_hash_size;
 			unsigned char* new_path_hash;
+			uint32_t new_path_hash_size;
 			unsigned char* serialized_result_block;
+			uint32_t serialized_result_block_size;
 			
 			//Computed Params
 			uint32_t x;
@@ -54,17 +63,25 @@
 
 			//PositionMap
 			uint32_t* posmap;
+			uint32_t posmap_size;
 
 			//Stash components
 			Stash stash;
+      Stash read_only_stash;  // ADIL. optimized stash
 			Stash *recursive_stash;
+			uint32_t recursive_stash_size;
 
 			// Parameters for recursive ORAMs (these are per arrays for corresponding parameters for each level of recursion)
 			uint64_t *max_blocks_level;
+			uint32_t max_blocks_level_size;
 			uint64_t *real_max_blocks_level;
-			uint64_t *N_level;
+			uint32_t real_max_blocks_level_size;
+			uint64_t *N_level;	
+			uint32_t N_level_size;
 			uint32_t *D_level;
+			uint32_t D_level_size;
 			sgx_sha256_hash_t* merkle_root_hash_level;
+			uint32_t merkle_root_hash_level_size;
 
 			//Key components		
 			unsigned char *aes_key;
@@ -83,7 +100,7 @@
 			void BuildTreeRecursive(int32_t level, uint32_t *prev_pmap);
 			void BuildTree(uint32_t max_blocks);
 			void Initialize();
-			void SetParams(uint8_t pZ, uint32_t pmax_blocks, uint32_t pdata_size, uint32_t pstash_size, uint32_t poblivious_flag, uint32_t precursion_data_size, int8_t precursion_levels, uint64_t onchip_posmap_mem_limit);
+			void SetParams(bool isLSinit, uint8_t pZ, uint32_t pmax_blocks, uint32_t pdata_size, uint32_t pstash_size, uint32_t poblivious_flag, uint32_t precursion_data_size, int8_t precursion_levels, uint64_t onchip_posmap_mem_limit);
 			void SampleKey();
 
 			//Constructor & Destructor
@@ -100,12 +117,20 @@
 			void CreateNewPathHash(unsigned char *path_ptr, unsigned char *old_path_hash, unsigned char *new_path_hash, uint32_t leaf, uint32_t block_size, uint32_t D_level, uint32_t level);  
 			void addToNewPathHash(unsigned char *path_iter, unsigned char* old_path_hash, unsigned char* new_path_hash_trail, unsigned char* new_path_hash, uint32_t level_in_path, uint32_t 							leaf_temp_prev, uint32_t block_size ,uint32_t D_level, uint32_t level);
 			void PushBlocksFromPathIntoStash(unsigned char* decrypted_path_ptr, uint32_t level, uint32_t data_size, uint32_t block_size, uint32_t D_level, uint32_t id, uint32_t position_in_id, 				uint32_t *nextLeaf, uint32_t newleaf, uint32_t sampledLeaf, int32_t newleaf_nextlevel);
+
+      // ADIL.
+			void PushBlocksFromPathIntoStashOptimized(unsigned char* decrypted_path_ptr, uint32_t level, uint32_t data_size, uint32_t block_size, uint32_t D_level, uint32_t id, uint32_t position_in_id, 				uint32_t *nextLeaf, uint32_t newleaf, uint32_t sampledLeaf, int32_t newleaf_nextlevel);
+
 			uint32_t access_oram_level(char opType, uint32_t leaf, uint32_t id, uint32_t position_in_id, uint32_t level, uint32_t newleaf,uint32_t newleaf_nextleaf, unsigned char *data_in,  								unsigned char *data_out);		
 			//uint32_t access(uint32_t id, uint32_t position_in_id, char opType, uint32_t level, unsigned char *data_in, unsigned char *data_out);
 
 			//Misc                
 			//uint32_t savePosmap(unsigned char *posmap_serialized, uint32_t posmap_size); 
 			void OAssignNewLabelToBlock(uint32_t id, uint32_t position_in_id, uint32_t level, uint32_t newleaf, uint32_t newleaf_nextlevel, uint32_t * nextLeaf);
+
+      // ADIL.
+			void OAssignNewLabelToBlockOptimized(uint32_t id, uint32_t position_in_id, uint32_t level, uint32_t newleaf, uint32_t newleaf_nextlevel, uint32_t * nextLeaf);
+
 			uint32_t FillResultBlock(uint32_t id, unsigned char *result_data, uint32_t block_size);
 	};
 

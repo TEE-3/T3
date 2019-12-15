@@ -55,7 +55,7 @@ enclave {
 	trusted {
 		// public int8_t setEnclaveParams(uint32_t maxBlocks, uint32_t stashSize, uint32_t dataSize, uint32_t non_oblivious, uint32_t recursion_blockSize, uint32_t oram_type);
 		public uint32_t createNewORAMInstance(uint32_t maxBlocks, uint32_t dataSize, uint32_t stashSize, uint32_t oblivious_flag, uint32_t recursion_data_size, int8_t recursion_levels, uint64_t onchip_posmap_mem_limit, uint32_t oram_type, uint8_t pZ);
-		public void accessInterface(uint32_t instance_id, uint8_t oram_type, [in, size = request_size] unsigned char* encrypted_request, [out, size = response_size] unsigned char *encrypted_response, [in, size = tag_size] unsigned char *tag_in, [out, size = tag_size] unsigned char *tag_out, uint32_t request_size, uint32_t response_size, uint32_t tag_size);
+		public void accessInterface(uint32_t instance_id, uint8_t oram_type, uint32_t max_blocks, [in, size = request_size] unsigned char* encrypted_request, [out, size = response_size] unsigned char *encrypted_response, [in, size = tag_size] unsigned char *tag_in, [out, size = tag_size] unsigned char *tag_out, uint32_t request_size, uint32_t response_size, uint32_t tag_size);
         public void accessBulkReadInterface(uint32_t instance_id, uint8_t oram_type, uint32_t no_of_requests, [in, size = request_size] unsigned char* encrypted_request, [out, size = response_size] unsigned char *encrypted_response, [in, size = tag_size] unsigned char *tag_in, [out, size = tag_size] unsigned char *tag_out, uint32_t request_size, uint32_t response_size, uint32_t tag_size);
 		// public uint8_t initialize_oram(uint32_t maxBlocks, uint32_t dataSize, [user_check] void* req, [user_check] void *resp);
 		// public void access_oram(uint32_t instance_id, char OpType, uint32_t loc, [in, size = data_size] unsigned char* data_in, [out, size = data_size] unsigned char *data_out, uint32_t data_size );
@@ -65,9 +65,11 @@ enclave {
 		public uint32_t storePosmapMerkleRoot([out,size = posmap_size] unsigned char* posmap, uint32_t posmap_size, [out,size = hash_and_key_size] unsigned char* merkle_root_and_aes_key, uint32_t hash_and_key_size);
 		public uint32_t storeStashLevel([in,size = stash_size] unsigned char* stash, uint32_t stash_size, uint32_t level);
 		*/
+        public uint64_t ZT_get_recursive_tree_size(uint32_t instance_id, uint32_t oram_type);
 
     // ADIL.
     public void ORAM_testing(uint32_t instance_id, uint8_t oram_type, uint32_t ORAM_block_size);
+    
 
 	};
     /* 
@@ -79,7 +81,6 @@ enclave {
         void ocall_print_string([in, string] const char *str);
 	void build_fetchChildHash(uint32_t left, uint32_t right, [out, size=hash_size] unsigned char* lchild, [out, size=hash_size] unsigned char* rchild, uint32_t hash_size, uint32_t recursion_level);
      uint8_t uploadObject([in,size = bucket_size] unsigned char* serialized_bucket, uint32_t bucket_size , uint32_t label, [in,size = hash_size] unsigned char* hash, uint32_t hash_size , uint32_t size_for_level, uint32_t recursion_level);
-	 uint8_t downloadObject([out,size = bucket_size] unsigned char* serialized_bucket, uint32_t bucket_size , uint32_t label, [out,size = hash_size] unsigned char* hash, uint32_t hash_size,uint32_t level, uint32_t D_lev );
 	 uint8_t downloadPath([out,size = path_size] unsigned char* serialized_path, uint32_t path_size , uint32_t label,[out,size = path_hash_size] unsigned char *path_hash, uint32_t path_hash_size, uint32_t level, uint32_t D_lev);
 	 uint8_t uploadPath([in,size = path_size] unsigned char* serialized_path, uint32_t path_size , uint32_t label, [in,size = path_hash_size] unsigned char *path_hash, uint32_t path_hash_size, uint32_t level, uint32_t D_level);
 	 void time_report(uint8_t point);

@@ -25,7 +25,7 @@
 		private:
 			struct nodev2 *start;
 			//For non-oblivious stash:		
-			uint32_t current_size;
+			uint32_t current_size = 0;
 			uint32_t stash_data_size;
 			//Static upper bound on stash size
 			uint32_t STASH_SIZE;

@@ -86,6 +86,7 @@
 
 	extern "C" void oassign_newlabel(uint32_t *ptr_to_label, uint32_t newLabel, bool flag);
 	extern "C" void ofix_recursion(unsigned char *ptr_to_data_in_block, bool flag, uint32_t newLabel, uint32_t* nextLeaf);
+	extern "C" void ofix_recursion_optimized(unsigned char *ptr_to_data_in_block, bool flag, uint32_t newLabel, uint32_t* nextLeaf);
 	extern "C" void omove(uint32_t i, uint32_t *item, uint32_t loc, uint32_t *leaf, uint32_t newLabel);
 	extern "C" void stash_insert(void* iter_block, void *block, uint32_t extdata_size, bool flag, bool *block_written);
 

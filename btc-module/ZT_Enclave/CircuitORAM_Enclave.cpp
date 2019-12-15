@@ -25,13 +25,13 @@ void oarray_search2(uint32_t *array, uint32_t loc, uint32_t *leaf, uint32_t newL
     return;
 }
 
-void CircuitORAM::Initialize(uint8_t pZ, uint32_t pmax_blocks, uint32_t pdata_size, uint32_t pstash_size, uint32_t poblivious_flag, uint32_t precursion_data_size, int8_t precursion_levels, uint64_t onchip_posmap_mem_limit){
+void CircuitORAM::Initialize(bool isLSinit, uint8_t pZ, uint32_t pmax_blocks, uint32_t pdata_size, uint32_t pstash_size, uint32_t poblivious_flag, uint32_t precursion_data_size, int8_t precursion_levels, uint64_t onchip_posmap_mem_limit){
 	#ifdef BUILDTREE_DEBUG
 		printf("In CircuitORAM::Initialize, Started Initialize\n");
 	#endif
 
 	ORAMTree::SampleKey();	
-	ORAMTree::SetParams(pZ, pmax_blocks, pdata_size, pstash_size, poblivious_flag, precursion_data_size, precursion_levels, onchip_posmap_mem_limit);
+	ORAMTree::SetParams(isLSinit, pZ, pmax_blocks, pdata_size, pstash_size, poblivious_flag, precursion_data_size, precursion_levels, onchip_posmap_mem_limit);
 	ORAMTree::Initialize();
 
 	uint32_t d_largest;
@@ -40,10 +40,10 @@ void CircuitORAM::Initialize(uint8_t pZ, uint32_t pmax_blocks, uint32_t pdata_si
 	else
 		d_largest = D_level[recursion_levels];
 
-	deepest = (uint32_t*) malloc (sizeof(uint32_t) * (d_largest+2));
-	target = (uint32_t*) malloc (sizeof(uint32_t) * (d_largest+2));
-	deepest_position = (int32_t*) malloc ((d_largest+2) * sizeof(uint32_t) );
-	target_position = (int32_t*) malloc ((d_largest+2) * sizeof(uint32_t) );
+	deepest = (uint32_t*) calloc (d_largest+2,sizeof(uint32_t));
+	target = (uint32_t*) calloc (d_largest+2,sizeof(uint32_t));
+	deepest_position = (int32_t*) calloc (d_largest+2, sizeof(uint32_t) );
+	target_position = (int32_t*) calloc (d_largest+2, sizeof(uint32_t) );
 	serialized_block_hold = (unsigned char*) malloc (data_size + ADDITIONAL_METADATA_SIZE);
 	serialized_block_write = (unsigned char*) malloc (data_size + ADDITIONAL_METADATA_SIZE);	
 
@@ -179,7 +179,7 @@ uint32_t* CircuitORAM::prepare_deepest(uint32_t N, uint32_t D, uint32_t leaf, un
 
 
 
-                for(k=0;k<Z;k++) {
+            for(k=0;k<Z;k++) {
                 bool dummy_flag = isBlockDummy(serialized_path_ptr, gN);
                 uint32_t l1 = getTreeLabel(serialized_path_ptr) + N;
                 uint32_t l2 = leaf + N;
@@ -445,16 +445,17 @@ void CircuitORAM::CircuitORAM_FetchBlock(unsigned char* decrypted_path, unsigned
 		#endif
 	}	
 
-	// WriteBack the path, arr_blocks
-	#ifdef ENCRYPTION_ON
-		uploadPath(&rt, encrypted_path, path_size, leaf + nlevel, new_path_hash, new_path_hash_size, level, dlevel);			
-	#else
-		uploadPath(&rt, decrypted_path, path_size, leaf + nlevel, new_path_hash, new_path_hash_size, level, dlevel);
-	#endif	
-
-	//Set newleaf for fetched_block
-	setTreeLabel(serialized_result_block, newleaf);
-
+	if(opType == 'w'){
+		// WriteBack the path, arr_blocks
+		#ifdef ENCRYPTION_ON
+			uploadPath(&rt, encrypted_path, path_size, leaf + nlevel, new_path_hash, new_path_hash_size, level, dlevel);			
+		#else
+			uploadPath(&rt, decrypted_path, path_size, leaf + nlevel, new_path_hash, new_path_hash_size, level, dlevel);
+		#endif	
+	
+		//Set newleaf for fetched_block
+		setTreeLabel(serialized_result_block, newleaf);
+	}
 	//Insert Fetched Block into Stash
 	if(oblivious_flag){
 		if(recursion_levels!=-1) {
@@ -488,7 +489,7 @@ uint32_t CircuitORAM::access_oram_level(char opType, uint32_t leaf, uint32_t id,
 	decrypted_path = ReadBucketsFromPath(leaf + N_level[level], path_hash, level);
 
   // ADIL.
-  if (opType == 'r') {
+  if (opType == 'z') {
     printf("[ADIL]. [WARNING, Not properly checked!] Reading from Level: %d\n", level);
 	  return_value = CircuitORAM_Access_Read(opType, id, position_in_id,leaf, newleaf, newleaf_nextleaf,decrypted_path, 
 					path_hash,level,D_level[level],N_level[level], data_in, data_out); 
@@ -743,10 +744,11 @@ uint32_t CircuitORAM::CircuitORAM_Access(char opType, uint32_t id, uint32_t posi
 			getTreeLabel(serialized_result_block),return_value);
 		printf("Done with Fetch\n\n");
 	#endif
-            
-	EvictionRoutine(decrypted_path, encrypted_path, path_hash, new_path_hash, tdata_size, 
-			tblock_size, path_size, new_path_hash_size, leaf, level, dlevel, nlevel);
 
+	if(opType == 'w'){        
+		EvictionRoutine(decrypted_path, encrypted_path, path_hash, new_path_hash, tdata_size, 
+				tblock_size, path_size, new_path_hash_size, leaf, level, dlevel, nlevel);
+	}
 	return return_value;	
 }
 
@@ -859,13 +861,13 @@ uint32_t CircuitORAM::access(uint32_t id, uint32_t position_in_id, char opType, 
 	
 		decrypted_path = ReadBucketsFromPath(leaf+N, path_hash,-1);			
 
-    // ADIL.
-    if (opType == 'r') {
-      printf("[ADIL]. Simple (LogN) reading\n");
-		  CircuitORAM_Access_Read(opType, id, -1, leaf, newleaf, -1, decrypted_path, path_hash, -1, D, N, data_in, data_out);
-    } else {
-		  CircuitORAM_Access(opType, id, -1, leaf, newleaf, -1, decrypted_path, path_hash, -1, D, N, data_in, data_out);
-    }
+		// ADIL.
+		if (opType == 'z') {
+		printf("[ADIL]. Simple (LogN) reading\n");
+			CircuitORAM_Access_Read(opType, id, -1, leaf, newleaf, -1, decrypted_path, path_hash, -1, D, N, data_in, data_out);
+		} else {
+			CircuitORAM_Access(opType, id, -1, leaf, newleaf, -1, decrypted_path, path_hash, -1, D, N, data_in, data_out);
+		}
 	}
 
 	else if(level==0) {

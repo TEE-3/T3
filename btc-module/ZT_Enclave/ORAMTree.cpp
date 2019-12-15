@@ -243,6 +243,7 @@ void ORAMTree::BuildTreeRecursive(int32_t level, uint32_t *prev_pmap){
 		else
 			max_blocks_local = max_blocks;
 
+        posmap_size = max_blocks_local * sizeof(uint32_t);
 		uint32_t *posmap_l = (uint32_t *) malloc( max_blocks_local * sizeof(uint32_t) );
 
 		#ifdef BUILDTREE_DEBUG
@@ -316,113 +317,116 @@ void ORAMTree::BuildTreeRecursive(int32_t level, uint32_t *prev_pmap){
 		uint32_t c = real_max_blocks_level[level] - (blocks_per_bucket_in_ll * pN);
 		uint32_t cnt = 0;
 
-		Bucket temp(Z);
-		temp.initialize(tdata_size, gN);
-		temp.displayBlocks();
+        
+        Bucket temp(Z);
+        temp.initialize(tdata_size, gN);
+        temp.displayBlocks();
 
-		//Build Last Level of Tree
-		uint32_t label = 0;
-		for(uint32_t i = pN; i <= ptreeSize; i++) {
+        //Build Last Level of Tree
+        uint32_t label = 0;
+        for(uint32_t i = pN; i <= ptreeSize; i++) {
 
-			temp.reset_values(gN);
+            temp.reset_values(gN);
 
-			uint32_t blocks_in_this_bucket = blocks_per_bucket_in_ll;
-			if(cnt < c) {
-				blocks_in_this_bucket+=1;
-				cnt+=1;
-			}
+            uint32_t blocks_in_this_bucket = blocks_per_bucket_in_ll;
+            if(cnt < c) {
+                blocks_in_this_bucket+=1;
+                cnt+=1;
+            }
 
-			#ifdef BUILDTREE_DEBUG
-				printf("Bucket : %d\n", i);
-			#endif
+            #ifdef BUILDTREE_DEBUG
+                printf("Bucket : %d\n", i);
+            #endif
 
-			for(uint8_t q=0;q<blocks_in_this_bucket;q++) {	
-				temp.blocks[q].id = label;
-				temp.blocks[q].treeLabel = i - pN;
+            for(uint8_t q=0;q<blocks_in_this_bucket;q++) {	
+                temp.blocks[q].id = label;
+                temp.blocks[q].treeLabel = i - pN;
 
-				if(level!=recursion_levels) { 	
-					#ifdef BUILDTREE_DEBUG										
-						printf("Block %d: ",temp.blocks[q].id);
-						for(uint8_t p=0;p<x;p++) {
-							printf("%d,",(prev_pmap[(label*x)+p]));
-						}
-						printf("\n");
-					#endif
-					temp.blocks[q].fill_recursion_data(&(prev_pmap[(label)*x]), recursion_data_size);
-				}
-				else{
-					#ifdef BUILDTREE_DEBUG
-						printf("(%d,%d)",temp.blocks[q].id, temp.blocks[q].treeLabel);
-					#endif
-				}
+                if(level!=recursion_levels) { 	
+                    #ifdef BUILDTREE_DEBUG										
+                        printf("Block %d: ",temp.blocks[q].id);
+                        for(uint8_t p=0;p<x;p++) {
+                            printf("%d,",(prev_pmap[(label*x)+p]));
+                        }
+                        printf("\n");
+                    #endif
+                    temp.blocks[q].fill_recursion_data(&(prev_pmap[(label)*x]), recursion_data_size);
+                }
+                else{
+                    #ifdef BUILDTREE_DEBUG
+                        printf("(%d,%d)",temp.blocks[q].id, temp.blocks[q].treeLabel);
+                    #endif
+                }
 
-				posmap_l[temp.blocks[q].id] = temp.blocks[q].treeLabel;
-				label++;	
-			}
+                posmap_l[temp.blocks[q].id] = temp.blocks[q].treeLabel;
+                label++;	
+            }
 
-			#ifdef BUILDTREE_DEBUG
-				printf("\n");
-			#endif
+            #ifdef BUILDTREE_DEBUG
+                printf("\n");
+            #endif
 
-			#ifdef ENCRYPTION_ON
-				temp.aes_encryptBlocks(tdata_size, aes_key);
-			#endif			
-	
-			unsigned char *serialized_bucket = temp.serialize(tdata_size);
-			uint8_t ret;
+            #ifdef ENCRYPTION_ON
+                temp.aes_encryptBlocks(tdata_size, aes_key);
+            #endif			
+    
+            unsigned char *serialized_bucket = temp.serialize(tdata_size);
+            uint8_t ret;
 
-			//Hash / Integrity Tree
-			sgx_sha256_msg(serialized_bucket, block_size * Z, (sgx_sha256_hash_t*) &(merkle_root_hash_level[level]));
+            //Hash / Integrity Tree
+            sgx_sha256_msg(serialized_bucket, block_size * Z, (sgx_sha256_hash_t*) &(merkle_root_hash_level[level]));
 
-			//Upload Bucket
-			uploadObject(&ret, serialized_bucket, Z*block_size ,i, (unsigned char*) &(merkle_root_hash_level[level]), HASH_LENGTH, block_size, level);
+            //Upload Bucket
+            uploadObject(&ret, serialized_bucket, Z*block_size ,i, (unsigned char*) &(merkle_root_hash_level[level]), HASH_LENGTH, block_size, level);
 
-			#ifdef BUILDTREE_VERIFICATION_DEBUG
-			printf("Level = %d, Bucket no = %d, Hash = ",level, i);
-			for(uint8_t l = 0;l<HASH_LENGTH;l++)
-			  printf("%c",(merkle_root_hash_level[level][l]%26)+'A');
-			printf("\n");
-			#endif
+            #ifdef BUILDTREE_VERIFICATION_DEBUG
+            printf("Level = %d, Bucket no = %d, Hash = ",level, i);
+            for(uint8_t l = 0;l<HASH_LENGTH;l++)
+            printf("%c",(merkle_root_hash_level[level][l]%26)+'A');
+            printf("\n");
+            #endif
 
-			free(serialized_bucket);
-		}
+            free(serialized_bucket);
+        }
+        
+        if(isLSinit){
+            //Build Upper Levels of Tree
+            for(uint32_t i = pN - 1; i>=1; i--){
+                temp.reset_values(gN);		
 
-		//Build Upper Levels of Tree
-		for(uint32_t i = pN - 1; i>=1; i--){
-			temp.reset_values(gN);		
+                #ifdef ENCRYPTION_ON
+                    temp.aes_encryptBlocks(tdata_size, aes_key);
+                #endif
 
-			#ifdef ENCRYPTION_ON
-				temp.aes_encryptBlocks(tdata_size, aes_key);
-			#endif
+                unsigned char *serialized_bucket = temp.serialize(tdata_size);
+                uint8_t ret;
 
-			unsigned char *serialized_bucket = temp.serialize(tdata_size);
-			uint8_t ret;
+                //Hash 	
+                build_fetchChildHash(i*2, i*2 +1, hash_lchild, hash_rchild, HASH_LENGTH, level);		
+                sgx_sha_state_handle_t p_sha_handle;
+                sgx_sha256_init(&p_sha_handle);
+                sgx_sha256_update(serialized_bucket, block_size * Z, p_sha_handle);					
+                sgx_sha256_update(hash_lchild, SGX_SHA256_HASH_SIZE, p_sha_handle);
+                sgx_sha256_update(hash_rchild, SGX_SHA256_HASH_SIZE, p_sha_handle);
+                sgx_sha256_get_hash(p_sha_handle, (sgx_sha256_hash_t*) merkle_root_hash_level[level]);
+                sgx_sha256_close(p_sha_handle);	
 
-			//Hash 	
-			build_fetchChildHash(i*2, i*2 +1, hash_lchild, hash_rchild, HASH_LENGTH, level);		
-			sgx_sha_state_handle_t p_sha_handle;
-			sgx_sha256_init(&p_sha_handle);
-			sgx_sha256_update(serialized_bucket, block_size * Z, p_sha_handle);					
-			sgx_sha256_update(hash_lchild, SGX_SHA256_HASH_SIZE, p_sha_handle);
-			sgx_sha256_update(hash_rchild, SGX_SHA256_HASH_SIZE, p_sha_handle);
-			sgx_sha256_get_hash(p_sha_handle, (sgx_sha256_hash_t*) merkle_root_hash_level[level]);
-			sgx_sha256_close(p_sha_handle);	
+                //Upload Bucket 
+                uploadObject(&ret, serialized_bucket, Z*block_size ,i, (unsigned char*) &(merkle_root_hash_level[level]), HASH_LENGTH, block_size, level);
 
-			//Upload Bucket 
-			uploadObject(&ret, serialized_bucket, Z*block_size ,i, (unsigned char*) &(merkle_root_hash_level[level]), HASH_LENGTH, block_size, level);
+                #ifdef BUILDTREE_VERIFICATION_DEBUG
+                printf("Level = %d, Bucket no = %d, Hash = ",level, i);
+                for(uint8_t l = 0;l<HASH_LENGTH;l++)
+                printf("%c",(merkle_root_hash_level[level][l]%26)+'A');
+                printf("\n");
+                #endif
 
-			#ifdef BUILDTREE_VERIFICATION_DEBUG
-			printf("Level = %d, Bucket no = %d, Hash = ",level, i);
-			for(uint8_t l = 0;l<HASH_LENGTH;l++)
-			  printf("%c",(merkle_root_hash_level[level][l]%26)+'A');
-			printf("\n");
-			#endif
-
-			free(serialized_bucket);	
-	        }
-
-		free(hash_lchild);
-		free(hash_rchild);
+                free(serialized_bucket);	
+            }
+        }
+        free(hash_lchild);
+        free(hash_rchild);
+        
 		BuildTreeRecursive(level-1, posmap_l);
 		if(level!=0)
 			free(posmap_l);			
@@ -453,40 +457,43 @@ void ORAMTree::BuildTreeRecursive(int32_t level, uint32_t *prev_pmap){
 
 void ORAMTree::Initialize() {
 
-    if(recursion_levels<0) {
+  if(recursion_levels<0) {
         posmap = (uint32_t*) malloc(max_blocks*sizeof(uint32_t));
-	printf("In ORAMTree::Initialize(), Before BuildTreeRecursive\n");
+	  printf("In ORAMTree::Initialize(), Before BuildTreeRecursive\n");
         BuildTree(max_blocks);
-	printf("In ORAMTree::Initialize(), After BuildTreeRecursive\n");
-    }
-    else {
-        N_level = (uint64_t*) malloc ((recursion_levels +1) * sizeof(uint64_t));
-        D_level = (uint32_t*) malloc ((recursion_levels +1) * sizeof(uint64_t));
-        recursive_stash = (Stash *) malloc(sizeof(Stash) * (recursion_levels+1));
+	  printf("In ORAMTree::Initialize(), After BuildTreeRecursive\n");
+  }
+  else {
+        N_level_size = (recursion_levels +1) * sizeof(uint64_t);
+        N_level = (uint64_t*) malloc (N_level_size);
+        D_level_size = (recursion_levels +1) * sizeof(uint64_t);
+        D_level = (uint32_t*) malloc (D_level_size);
+        recursive_stash_size = sizeof(Stash) * (recursion_levels+1);
+        recursive_stash = (Stash *) malloc(recursive_stash_size);
+        printf("***recursive_stash pointer: %p\n", (void*) recursive_stash);
         //Fix stash_size for each level
         // 2.19498 log2(N) + 1.56669 * lambda - 10.98615
         printf("RECURSION_LEVELS = %d\n", recursion_levels);
         for(uint32_t i =1;i <=recursion_levels;i++){
-		printf("recursion_level i=%d, gN = %d\n",i, gN);
-		
-		if(i!=recursion_levels){
-			if(oblivious_flag)
-				recursive_stash[i].setup(stash_size,recursion_data_size, gN);
-			else
-				recursive_stash[i].setup_nonoblivious(recursion_data_size, gN);
-		}
-		else{
-			if(oblivious_flag)
+		      printf("recursion_level i=%d, gN = %d\n",i, gN);
+              
+		      if(i!=recursion_levels){
+			      if(oblivious_flag)
+				      recursive_stash[i].setup(stash_size,recursion_data_size, gN);
+			      else
+				      recursive_stash[i].setup_nonoblivious(recursion_data_size, gN);
+		      } else {
+			      if(oblivious_flag)
 			        recursive_stash[i].setup(stash_size, data_size, gN);
-			else
-				recursive_stash[i].setup_nonoblivious(data_size, gN);
+			      else
+				      recursive_stash[i].setup_nonoblivious(data_size, gN);
 
-		}        
-	}
-	printf("In ORAMTree::Initialize(), Before BuildTreeRecursive\n");
+		      }        
+	      }
+	    printf("In ORAMTree::Initialize(), Before BuildTreeRecursive\n");
         BuildTreeRecursive(recursion_levels, NULL);
-	printf("In ORAMTree::Initialize(), After BuildTreeRecursive\n");			
-    }
+	    printf("In ORAMTree::Initialize(), After BuildTreeRecursive\n");			
+  }
 
 	uint32_t d_largest;
 	if(recursion_levels==-1)
@@ -502,12 +509,22 @@ void ORAMTree::Initialize() {
 
 	uint64_t largest_path_size = Z*(data_size+ADDITIONAL_METADATA_SIZE)*(d_largest+1);
 	printf("Z=%d, data_size=%d, d_largest=%d, Largest_path_size = %ld\n", Z, data_size, d_largest, largest_path_size);
-	encrypted_path = (unsigned char*) malloc (largest_path_size);
-	decrypted_path = (unsigned char*) malloc (largest_path_size);
-	fetched_path_array = (unsigned char*) malloc (largest_path_size);
-	path_hash = (unsigned char*) malloc (HASH_LENGTH*2*(d_largest+1));
-	new_path_hash = (unsigned char*) malloc (HASH_LENGTH*2*(d_largest+1));
-	serialized_result_block = (unsigned char*) malloc (data_size+ADDITIONAL_METADATA_SIZE);
+    encrypted_path_size = largest_path_size;
+	encrypted_path = (unsigned char*) malloc (encrypted_path_size);
+    decrypted_path_size = largest_path_size;
+	decrypted_path = (unsigned char*) malloc (decrypted_path_size);
+	fetched_path_array_size = largest_path_size;
+    fetched_path_array = (unsigned char*) malloc (fetched_path_array_size);
+    path_hash_size = HASH_LENGTH*2*(d_largest+1);
+	path_hash = (unsigned char*) malloc (path_hash_size);
+	new_path_hash_size = HASH_LENGTH*2*(d_largest+1);
+    new_path_hash = (unsigned char*) malloc (new_path_hash_size);
+    serialized_result_block_size = data_size+ADDITIONAL_METADATA_SIZE;
+	serialized_result_block = (unsigned char*) malloc (serialized_result_block_size);
+
+  // ADIL. Create a Stash for the READ-ONLY Part
+//   read_only_stash.setup(stash_size, data_size, gN);
+  printf("Didn't create the read-only stash!\n");
 }
 
 /*
@@ -788,6 +805,64 @@ void ORAMTree::PushBlocksFromPathIntoStash(unsigned char* decrypted_path_ptr, ui
     }	
 }
 
+void ORAMTree::PushBlocksFromPathIntoStashOptimized(unsigned char* decrypted_path_ptr, uint32_t level, uint32_t data_size, uint32_t block_size, uint32_t D_level, uint32_t id, uint32_t position_in_id, uint32_t *nextLeaf, uint32_t newleaf, uint32_t sampledLeaf, int32_t newleaf_nextlevel) {
+    uint32_t i;
+    #ifdef ACCESS_DEBUG
+        printf("Fetched Path in PushBlocksFromPathIntoStash : \n");
+        showPath_reverse(decrypted_path, Z*(D_level+1), data_size);
+    #endif
+
+    // FetchBlock Module :
+    for(i=0;i< (Z*(D_level+1)); i++) {
+        bool dummy_flag = getId(decrypted_path_ptr)==gN;
+            if(oblivious_flag) {
+                //printf("Oblivious insertion into stack\n");
+                if(recursion_levels!=-1){
+                    // if(level == recursion_levels)
+                    //  read_only_stash.pass_insert(decrypted_path_ptr,isBlockDummy(decrypted_path_ptr, gN));
+                    //else
+                    recursive_stash[level].pass_insert(decrypted_path_ptr,isBlockDummy(decrypted_path_ptr, gN));
+                }
+                else {							
+                    stash.pass_insert(decrypted_path_ptr,isBlockDummy(decrypted_path_ptr,gN));
+                }
+                setId(decrypted_path_ptr,gN);
+            }
+            else{
+                assert(false);
+            }
+        decrypted_path_ptr+=block_size;
+    }	
+}
+
+void ORAMTree::OAssignNewLabelToBlockOptimized(uint32_t id, uint32_t position_in_id, uint32_t level, uint32_t newleaf, uint32_t newleaf_nextlevel, uint32_t * nextLeaf){
+    uint32_t k;
+    nodev2 *listptr_t;
+    if(recursion_levels>0)
+        listptr_t = recursive_stash[level].getStart();		
+    else
+        listptr_t = stash.getStart();
+
+    for(k=0; k < stash_size; k++)
+    {
+        bool flag1,flag2 = false;
+        flag1 = ( (getId(listptr_t->serialized_block) == id) && (!isBlockDummy(listptr_t->serialized_block,gN)) );
+        // oassign_newlabel(getTreeLabelPtr(listptr_t->serialized_block),newleaf, flag1);
+
+        if(level!=recursion_levels && recursion_levels!=-1) {
+            for(uint8_t p = 0;p < x;p++) {
+                flag2 = (flag1 && (position_in_id == p));
+                ofix_recursion_optimized( &(listptr_t->serialized_block[24+p*4]), flag2, newleaf_nextlevel, nextLeaf);
+                // if (flag2) {
+                //   // printf("After -- label: %d\n", getTreeLabel(&(listptr_t->serialized_block[24+p*4])));
+                //   printf("NextLeaf: %zu\n", *nextLeaf);
+                // }
+            }
+        }
+        listptr_t=listptr_t->next;
+    }		
+}
+
 //Scan over the stash and fix recustion leaf label
 void ORAMTree::OAssignNewLabelToBlock(uint32_t id, uint32_t position_in_id, uint32_t level, uint32_t newleaf, uint32_t newleaf_nextlevel, uint32_t * nextLeaf){
     uint32_t k;
@@ -1045,7 +1120,8 @@ uint32_t ORAMTree::access(uint32_t id, uint32_t position_in_id, char opType, uin
 return nextLeaf;
 }
 */
-void ORAMTree::SetParams(uint8_t pZ, uint32_t s_max_blocks, uint32_t s_data_size, uint32_t s_stash_size, uint32_t oblivious, uint32_t s_recursion_data_size, int8_t precursion_levels, uint64_t onchip_posmap_mem_limit){
+void ORAMTree::SetParams(bool s_isLSinit, uint8_t pZ, uint32_t s_max_blocks, uint32_t s_data_size, uint32_t s_stash_size, uint32_t oblivious, uint32_t s_recursion_data_size, int8_t precursion_levels, uint64_t onchip_posmap_mem_limit){
+        isLSinit = s_isLSinit;
         max_blocks = s_max_blocks;
         data_size = s_data_size;
         stash_size = s_stash_size;
@@ -1065,8 +1141,10 @@ void ORAMTree::SetParams(uint8_t pZ, uint32_t s_max_blocks, uint32_t s_data_size
                 size_pmap0 = cur_pmap0_blocks * sizeof(uint32_t);
             }
 
-            max_blocks_level = (uint64_t*) malloc((recursion_levels + 1) * sizeof(uint64_t));
-            real_max_blocks_level = (uint64_t*) malloc((recursion_levels + 1) * sizeof(uint64_t));
+            max_blocks_level_size = (recursion_levels + 1) * sizeof(uint64_t);
+            max_blocks_level = (uint64_t*) malloc(max_blocks_level_size);
+            real_max_blocks_level_size = (recursion_levels + 1) * sizeof(uint64_t);
+            real_max_blocks_level = (uint64_t*) malloc(real_max_blocks_level_size);
             real_max_blocks_level[recursion_levels] = max_blocks;
             uint32_t lev = recursion_levels-1;
             while(lev > 0) {
@@ -1097,7 +1175,8 @@ void ORAMTree::SetParams(uint8_t pZ, uint32_t s_max_blocks, uint32_t s_data_size
             #endif
 
             gN = max_blocks_level[recursion_levels];
-            merkle_root_hash_level = (sgx_sha256_hash_t*) malloc((recursion_levels +1) * sizeof(sgx_sha256_hash_t));
+            merkle_root_hash_level_size = (recursion_levels +1) * sizeof(sgx_sha256_hash_t);
+            merkle_root_hash_level = (sgx_sha256_hash_t*) malloc(merkle_root_hash_level_size);
         }
         else{
             gN = max_blocks;

@@ -1,0 +1,188 @@
+btc_Untrusted/Main 8388608 10000 100 1088 new memory 1 64 path 4 0 400000 0 1
+IN App: max_blocks = 8388608
+Recursion Levels : 4
+
+IN LS : recursion_levels = 4, dataSize = 1112, recursionBlockSize = 88
+
+DataTree_size = 18656259744 or 17.374996 GB, HashTree_size = 134217696 or 0.125000 GB
+X = 16
+LS:Level : 0, Blocks : 2048
+LS:Level : 2, Blocks : 32768
+LS:Level : 3, Blocks : 524288
+LS:Level : 4, Blocks : 8388608
+Malloc?
+IN App: max_blocks = 8388608
+Recursion Levels : 4
+APP.cpp : ComputedRecursionLevels = 4Creating Path ORAM Instance
+Block Size: 1088
+Recursion Levels = 4
+In PathORAM::Initialize, Started Initialize
+
+
+ORAMTREE SAMPLEKEY WAS CALLED
+
+precursion_levels = 4real_max_blocks_level[0] = 2048 
+real_max_blocks_level[1] = 2048 
+real_max_blocks_level[2] = 32768 
+real_max_blocks_level[3] = 524288 
+real_max_blocks_level[4] = 8388608 
+
+ENCLAVE:Level : 0, Blocks : 2048
+ENCLAVE:Level : 1, Blocks : 2048
+ENCLAVE:Level : 2, Blocks : 32768
+ENCLAVE:Level : 3, Blocks : 524288
+ENCLAVE:Level : 4, Blocks : 8388608
+
+***recursive_stash pointer: 0x7f10a6bed3a0
+RECURSION_LEVELS = 4
+recursion_level i=1, gN = 8388608
+recursion_level i=2, gN = 8388608
+recursion_level i=3, gN = 8388608
+recursion_level i=4, gN = 8388608
+In ORAMTree::Initialize(), Before BuildTreeRecursive
+(8388608,0),(8388608,0),(8388608,0),(8388608,0),
+(8388608,0),(8388608,0),(8388608,0),(8388608,0),
+(8388608,0),(8388608,0),(8388608,0),(8388608,0),
+(8388608,0),(8388608,0),(8388608,0),(8388608,0),
+In ORAMTree::Initialize(), After BuildTreeRecursive
+Z=4, data_size=1088, d_largest=21, Largest_path_size = 97856
+Didn't create the read-only stash!
+Finished Initialize
+INSTANCE_ID returned = 0
+initialize_oram Successful
+IN App: max_blocks = 8388608
+Recursion Levels : 4
+APP.cpp : ComputedRecursionLevels = 4Creating Path ORAM Instance
+Block Size: 1088
+Recursion Levels = 4
+In PathORAM::Initialize, Started Initialize
+
+
+ORAMTREE SAMPLEKEY WAS CALLED
+
+precursion_levels = 4real_max_blocks_level[0] = 2048 
+real_max_blocks_level[1] = 2048 
+real_max_blocks_level[2] = 32768 
+real_max_blocks_level[3] = 524288 
+real_max_blocks_level[4] = 8388608 
+
+ENCLAVE:Level : 0, Blocks : 2048
+ENCLAVE:Level : 1, Blocks : 2048
+ENCLAVE:Level : 2, Blocks : 32768
+ENCLAVE:Level : 3, Blocks : 524288
+ENCLAVE:Level : 4, Blocks : 8388608
+
+***recursive_stash pointer: 0x7f10a8e36e40
+RECURSION_LEVELS = 4
+recursion_level i=1, gN = 8388608
+recursion_level i=2, gN = 8388608
+recursion_level i=3, gN = 8388608
+recursion_level i=4, gN = 8388608
+In ORAMTree::Initialize(), Before BuildTreeRecursive
+(8388608,0),(8388608,0),(8388608,0),(8388608,0),
+(8388608,0),(8388608,0),(8388608,0),(8388608,0),
+(8388608,0),(8388608,0),(8388608,0),(8388608,0),
+(8388608,0),(8388608,0),(8388608,0),(8388608,0),
+In ORAMTree::Initialize(), After BuildTreeRecursive
+Z=4, data_size=1088, d_largest=21, Largest_path_size = 97856
+Didn't create the read-only stash!
+Finished Initialize
+INSTANCE_ID returned = 1
+initialize_oram Successful
+43406.355682 ms
+Thread num 0
+d8c5f4ac107f0000d8c5f4ac107f0000000000000000000000000000000000005888bda6107f00000400000036638392e0f5e0a85ad40dc3faf673357fcab3253f8d898d3a11f5e498aa7ab087a38155ace9e7c815c6dc8c1f59e7377605c2bc8a7061db4da46e1e4ced05c9b12eef661280a0211d27aef6961d767c5ef5d0361ca538498afcd5a04d6ba832da0a06fa940a4850f919c0a121f26a6dc65228420e83da891d9ba48790f06a1bf3de6bea522ce67b8f9810af224a560d5a58eeea6a0c6a3e00b9a081493f4cc0025594f459d8b2727578cecefea5fbe3474a28c2baa0cb109d4159a93acd8e580ba00f8812aafc458efa55d444da855e20b8300ce7798ef8c68cb0bff0ad6a2e40f36c0b76827f8eaae60a0308bf42a821a295f0cc4a2276074b6dfc099cc9132c9e96272461edeaa2bc7a7b3be1fa5d52f06c661133f9ef1d04aacc57e7ce2a4edd04e2eb922116ccc79e833119afaa6c10c6d303fc7b4ec53cc6f15b501d05537c2b1eb7baa3394556a4495e464b052009bbf840677f386fbdd18238e898e2557fa662be13eeb8326ead1690c0602b58da2271f15f8f8ae950e2d8a4e9d2251a688e40e49f082f4ca470b759aeaad19e9c0946d83dc6c959661ac64068436c49d047e505defcd0d9740d70366fd9a54480fc7d564373e89688ddbb1e35090cd3c69f5301adf6b17feca23f3321694e8053c2a124d45c9527a5e79b7f4c7f5cd71edcf99dc4d6627bf8169a54efa05c20ace028287d39a8d4a8c1005ac11e70922bced8f38213ea2333d68b5400e0dce7be199880fe759f25554e55e2b96bd19f40ce955ecf20aa705a547fc97abccf3e26eae9ad32190388f9c66ba23a8ccfd6cdf27ca7b2dce3acd4991679b31cec293876435180c912505f83c8071c9292be683724bcfc711bd675ef6b20a78dcfbeac54691f61e3239b3330336d0b6a3cdbb1792aef17e35775888d01d82a5bb0a517cda3e18579be68f31f8eefa5c1b113df2b551c0e10dcca4aaa8e035ffc1a2998d64e8ed5e720e6862f481afe59cadd775a15e475ce7e44ca0928f00c9a8c7b9d2724143c984b412698a946a6e098de21eba2349992d06847f665e1e736b79df5e04851b1064e38b252113be208d893d12994892fa2ad102704135e9f18d2c9358637647b344605d6b5ed3737ed50920f64848453b9b0c2d5aa24fa75deafbf46594d72ef2e56dac71c129eae3d6a69cfd3b715d280327e858143e6fd8bda81af5ad7e2f5b6eb5b4cb590cc66896f5ccb82405e99917848926eb4dd2aefdb42ed22d5b7d37a0a22650108eb63b3ca53385e2cbceef7cc89935ef5dfb9c04ef0d43a5824691361267db6906090fb5c51e29cbd9d4350e7ccbefcee782afdd6fde34ae8809b04f84752441aa7ca992791f971591a343acfe7a0248995e733822ad66c3b17ed1698a23b072209accda756da76c050e93edd735700788fb022088dbed464141426c5c5d3c1e3260d6ab5ab3cd7060ef98e4009ffe09ae3b85ffbb6af0402
+btc_Untrusted/Main 8388608 10000 100 1088 new memory 1 64 path 4 0 400000 0 1
+IN App: max_blocks = 8388608
+Recursion Levels : 4
+
+IN LS : recursion_levels = 4, dataSize = 1112, recursionBlockSize = 88
+
+DataTree_size = 18656259744 or 17.374996 GB, HashTree_size = 134217696 or 0.125000 GB
+X = 16
+LS:Level : 0, Blocks : 2048
+LS:Level : 2, Blocks : 32768
+LS:Level : 3, Blocks : 524288
+LS:Level : 4, Blocks : 8388608
+Malloc?
+IN App: max_blocks = 8388608
+Recursion Levels : 4
+APP.cpp : ComputedRecursionLevels = 4Creating Path ORAM Instance
+Block Size: 1088
+Recursion Levels = 4
+In PathORAM::Initialize, Started Initialize
+
+
+ORAMTREE SAMPLEKEY WAS CALLED
+
+precursion_levels = 4real_max_blocks_level[0] = 2048 
+real_max_blocks_level[1] = 2048 
+real_max_blocks_level[2] = 32768 
+real_max_blocks_level[3] = 524288 
+real_max_blocks_level[4] = 8388608 
+
+ENCLAVE:Level : 0, Blocks : 2048
+ENCLAVE:Level : 1, Blocks : 2048
+ENCLAVE:Level : 2, Blocks : 32768
+ENCLAVE:Level : 3, Blocks : 524288
+ENCLAVE:Level : 4, Blocks : 8388608
+
+***recursive_stash pointer: 0x7fba16d513a0
+RECURSION_LEVELS = 4
+recursion_level i=1, gN = 8388608
+recursion_level i=2, gN = 8388608
+recursion_level i=3, gN = 8388608
+recursion_level i=4, gN = 8388608
+In ORAMTree::Initialize(), Before BuildTreeRecursive
+(8388608,0),(8388608,0),(8388608,0),(8388608,0),
+(8388608,0),(8388608,0),(8388608,0),(8388608,0),
+(8388608,0),(8388608,0),(8388608,0),(8388608,0),
+(8388608,0),(8388608,0),(8388608,0),(8388608,0),
+In ORAMTree::Initialize(), After BuildTreeRecursive
+Z=4, data_size=1088, d_largest=21, Largest_path_size = 97856
+Didn't create the read-only stash!
+Finished Initialize
+INSTANCE_ID returned = 0
+initialize_oram Successful
+IN App: max_blocks = 8388608
+Recursion Levels : 4
+APP.cpp : ComputedRecursionLevels = 4Creating Path ORAM Instance
+Block Size: 1088
+Recursion Levels = 4
+In PathORAM::Initialize, Started Initialize
+
+
+ORAMTREE SAMPLEKEY WAS CALLED
+
+precursion_levels = 4real_max_blocks_level[0] = 2048 
+real_max_blocks_level[1] = 2048 
+real_max_blocks_level[2] = 32768 
+real_max_blocks_level[3] = 524288 
+real_max_blocks_level[4] = 8388608 
+
+ENCLAVE:Level : 0, Blocks : 2048
+ENCLAVE:Level : 1, Blocks : 2048
+ENCLAVE:Level : 2, Blocks : 32768
+ENCLAVE:Level : 3, Blocks : 524288
+ENCLAVE:Level : 4, Blocks : 8388608
+
+***recursive_stash pointer: 0x7fba18f9ae40
+RECURSION_LEVELS = 4
+recursion_level i=1, gN = 8388608
+recursion_level i=2, gN = 8388608
+recursion_level i=3, gN = 8388608
+recursion_level i=4, gN = 8388608
+In ORAMTree::Initialize(), Before BuildTreeRecursive
+(8388608,0),(8388608,0),(8388608,0),(8388608,0),
+(8388608,0),(8388608,0),(8388608,0),(8388608,0),
+(8388608,0),(8388608,0),(8388608,0),(8388608,0),
+(8388608,0),(8388608,0),(8388608,0),(8388608,0),
+In ORAMTree::Initialize(), After BuildTreeRecursive
+Z=4, data_size=1088, d_largest=21, Largest_path_size = 97856
+Didn't create the read-only stash!
+Finished Initialize
+INSTANCE_ID returned = 1
+initialize_oram Successful
+43824.036504 ms
+Thread num 0
+d8050b1dba7f0000d8050b1dba7f00000000000000000000000000000000000058c8d316ba7f0000040000009c638392e0f5e0a85ad40dc3faf673357fcab3253fcde73d9011f5e498aa7ab087a38155ace9e7c815c6dc8c1f59e7377605c2bc8a7061db4da46e1e4ced05c9b12eef661280a0211d27aef6961d767c5ef5d0361ca538498afcd5a04d6ba832da0a06fa940a4850f919c0a121f26a6dc65228420e83da891d9ba48790f06a1bf3de6bea522ce67b8f9810af224a560d5a58eeea6a0c6a3e00b9a081493f4cc0025594f459d8b2727578cecefea5fbe3474a28c2baa0cb109d4159a93acd8e580ba00f8812aafc458efa55d444da855e20b8300ce7798ef8c68cb0bff0ad6a2e40f36c0b76827f8eaae60a0308bf42a821a295f0cc4a2276074b6dfc099cc9132c9e96272461edeaa2bc7a7b3be1fa5d52f06c661133f9ef1d04aacc57e7ce2a4edd04e2eb922116ccc79e833119afaa6c10c6d303fc7b4ec53cc6f15b501d05537c2b1eb7baa3394556a4495e464b052009bbf840677f386fbdd18238e898e2557fa662be13eeb8326ead1690c0602b58da2271f15f8f8ae950e2d8a4e9d2251a688e40e49f082f4ca470b759aeaad19e9c0946d83dc6c959661ac64068436c49d047e505defcd0d9740d70366fd9a54480fc7d564373e89688ddbb1e35090cd3c69f5301adf6b17feca23f3321694e8053c2a124d45c9527a5e79b7f4c7f5cd71edcf99dc4d6627bf8169a54efa05c20ace028287d39a8d4a8c1005ac11e70922bced8f38213ea2333d68b5400e0dce7be199880fe759f25554e55e2b96bd19f40ce955ecf20aa705a547fc97abccf3e26eae9ad32190388f9c66ba23a8ccfd6cdf27ca7b2dce3acd4991679b31cec293876435180c912505f83c8071c9292be683724bcfc711bd675ef6b20a78dcfbeac54691f61e3239b3330336d0b6a3cdbb1792aef17e35775888d01d82a5bb0a517cda3e18579be68f31f8eefa5c1b113df2b551c0e10dcca4aaa8e035ffc1a2998d64e8ed5e720e6862f481afe59cadd775a15e475ce7e44ca0928f00c9a8c7b9d2724143c984b412698a946a6e098de21eba2349992d06847f665e1e736b79df5e04851b1064e38b252113be208d893d12994892fa2ad102704135e9f18d2c935863764bb8017b3390f323737ed50920f64848493900068d5aa24fab5f71f1546594d72ef2e56dac71c129eae3d6a69cfd3b71592ee82d4858143e6fd8bda81af5ad7e2f5b6eb5b4cb590cc66896f5ccb82405e99917848926eb4dd2aefdb42ed22d5b7d37a0a22650108eb63b3ca53385e2cbceef7cc89935ef5dfb9c04ef0d43a5824691361267db6906090fb5c51e29cbd9d4350e7ccbefcee782afdd6fde34ae8809b04f84752441aa7ca992791f971591a343acfe7a0248995e733822ad66c3b17ed1698a23b072209accda756da76c050e93edd735700788fb022088dbed464141426c5c5d3c1e3260d6ab5ab3cd7060ef98e4009ffe09ae3b85ffbb6af0402

@@ -10,6 +10,8 @@
 #include <sstream>
 #include <bitset>
 #include <cassert>
+#include <thread>
+#include <sys/time.h>
 #include "ZT.hpp"
 #include "RandomRequestSource.hpp"
 #include <openssl/conf.h>

@@ -110,4 +110,3 @@ void aes_enc_serialized(unsigned char* decrypted_block, uint32_t data_size, unsi
 }
 
 
-

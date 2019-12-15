@@ -60,6 +60,14 @@ ifneq ($(ORAM_TESTING), 1)
    ORAM_TESTING := 0
 endif
 
+ifneq ($(MTHREADS), 1)
+   MTHREADS := 0
+endif
+
+ifneq ($(MULTI_READS), 1)
+   MULTI_READS := 0
+endif
+
 # Three configuration modes - Debug, prerelease, release
 #   Debug - Macro DEBUG enabled.
 #   Prerelease - Macro NDEBUG and EDEBUG enabled.
@@ -106,6 +114,11 @@ Enclave_Include_Paths := -IInclude -IEnclave -I$(SGX_SDK)/include -I$(SGX_SDK)/i
 #-I$(services_lib)/static_trusted -I$(services_lib)/common
 
 Enclave_C_Flags := $(SGX_COMMON_CFLAGS) -nostdinc -fvisibility=hidden -fpie -fstack-protector $(Enclave_Include_Paths)
+
+ifeq ($(OPTIMIZED), 1)
+   Enclave_C_Flags += -DOPTIMIZED
+endif
+
 Enclave_Cpp_Flags := $(Enclave_C_Flags) -std=c++11 -nostdinc++
 
 # To generate a proper enclave, it is recommended to follow below guideline to link the trusted libraries:
@@ -263,4 +276,3 @@ $(Signed_Enclave_Name): $(Enclave_Name)
 clean:
 	@rm -f .config_* $(App_Name) $(Enclave_Name) $(Signed_Enclave_Name) $(App_Cpp_Objects) ZT_Untrusted/Enclave_u.* $(Enclave_Cpp_Objects) ZT_Enclave/Enclave_t.* libZT.so 
 	$(MAKE) clean -C btc_Untrusted/
-
