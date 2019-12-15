@@ -55,7 +55,7 @@ depends on the spec of your system, edit the exec.sh accordingly.
 
 ## Note
 
-This implementation is just for the proof of concentp. ere are several places in the code that were implemented INSECURELY for the sake of code readibility and understanding. We are not responsible for any damages if the code is used for commercial purposes.
+This implementation is just for the proof of concept. There are several places in the code that were implemented INSECURELY for the sake of code readibility and understanding. We are not responsible for any damages if the code is used for commercial purposes.
 
   
 
