@@ -1,8 +1,0 @@
-/* Holds memory-related OCALLS */
-
-enclave {
-  untrusted {
-    void* ocall_get_untrusted_memory(long long size);
-    void  ocall_free_untrusted_memory([user_check] void* ptr);
-  };
-};
