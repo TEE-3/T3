@@ -25,11 +25,12 @@ The extract numbers requires a system that has at least 64gb of RAM, and a bitco
 
 However, for testing purpose in your system, please try the following step:
 
-Installing dependencies: 
+<!-- Installing dependencies: 
 
     cd scripts/
-    ./install.sh
-    
+    ./install.sh -->
+
+
 To obtain the testing result, enter bitcoin-module: 
 
     cd btc-module/
@@ -43,7 +44,7 @@ In particular, parameter **N**, **Z**, and **block_size** determine how big the 
 
 * T3 uses [bitcoin-api-cpp](https://github.com/minium/bitcoin-api-cpp) to handle the RPC communication with **bitcoind**. This allows T3 to obtain + verify new bitcoin blocks. But the current code is potentially broken and does not work blocks with segwit transactions.  
 
-* Running ./bitcointest with `opt` flag (optimized) returns the running time of 1000 **read_only** oram accesses and running time of 1000 standard access. Running ./bitcointest with `simple` flag return running time of **standard** ORAM access. 
+* Running ./bitcointest.sh with `opt` flag (optimized) returns the running time of 1000 **read_only** oram accesses and running time of 1000 standard access. Running ./bitcointest.sh with `simple` flag return running time of **standard** ORAM access. 
 
 ## Docker
 To test with docker, run:
