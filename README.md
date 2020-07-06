@@ -42,7 +42,7 @@ Other Notes:
 * Depends on the system memory, edit the exec.sh accordingly.
 In particular, parameter **N**, **Z**, and **block_size** determine how big the ORAM tree will be allocated in the memory. 
 
-* T3 uses [bitcoin-api-cpp](https://github.com/minium/bitcoin-api-cpp) to handle the RPC communication with **bitcoind**. This allows T3 to obtain + verify new bitcoin blocks. But the current code is potentially broken and does not work blocks with segwit transactions.  
+* T3 uses [bitcoin-api-cpp](https://github.com/minium/bitcoin-api-cpp) to handle the RPC communication with **bitcoind**. This allows T3 to obtain + verify new bitcoin blocks. But the current code need to be modified to work with **bitcoind** and does not work blocks with segwit transactions.  
 
 * Running ./bitcointest.sh with `opt` flag (optimized) returns the running time of 1000 **read_only** oram accesses and running time of 1000 standard access. Running ./bitcointest.sh with `simple` flag return running time of **standard** ORAM access. 
 
